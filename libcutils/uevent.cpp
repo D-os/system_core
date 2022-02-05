@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cutils/fs.h>
 #include <cutils/uevent.h>
 
 #include <errno.h>
@@ -55,7 +56,7 @@ ssize_t uevent_kernel_recv(int socket, void* buffer, size_t length, bool require
     struct sockaddr_nl addr;
     char control[CMSG_SPACE(sizeof(struct ucred))];
     struct msghdr hdr = {
-        &addr, sizeof(addr), &iov, 1, control, sizeof(control), 0,
+        &addr, sizeof(addr), &iov, 1, 0, control, sizeof(control), 0, 0,
     };
     struct ucred* cred;
 

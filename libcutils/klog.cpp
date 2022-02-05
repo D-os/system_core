@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cutils/fs.h>
 #include <cutils/klog.h>
 
 #include <errno.h>

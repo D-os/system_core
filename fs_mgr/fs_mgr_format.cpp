@@ -29,9 +29,9 @@
 #include <ext4_utils/ext4.h>
 #include <ext4_utils/ext4_utils.h>
 #include <logwrap/logwrap.h>
-#include <selinux/android.h>
-#include <selinux/label.h>
-#include <selinux/selinux.h>
+// #include <selinux/android.h>
+// #include <selinux/label.h>
+// #include <selinux/selinux.h>
 
 #include "fs_mgr_priv.h"
 

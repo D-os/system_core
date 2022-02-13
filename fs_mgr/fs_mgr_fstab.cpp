@@ -34,7 +34,7 @@
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
 #include <android-base/strings.h>
-#include <libgsi/libgsi.h>
+// #include <libgsi/libgsi.h>
 
 #include "fs_mgr_priv.h"
 
@@ -510,34 +510,34 @@ std::set<std::string> ExtraBootDevices(const Fstab& fstab) {
     return boot_devices;
 }
 
-FstabEntry BuildDsuUserdataFstabEntry() {
-    constexpr uint32_t kFlags = MS_NOATIME | MS_NOSUID | MS_NODEV;
+// FstabEntry BuildDsuUserdataFstabEntry() {
+//     constexpr uint32_t kFlags = MS_NOATIME | MS_NOSUID | MS_NODEV;
 
-    FstabEntry userdata = {
-            .blk_device = "userdata_gsi",
-            .mount_point = "/data",
-            .fs_type = "ext4",
-            .flags = kFlags,
-            .reserved_size = 128 * 1024 * 1024,
-    };
-    userdata.fs_mgr_flags.wait = true;
-    userdata.fs_mgr_flags.check = true;
-    userdata.fs_mgr_flags.logical = true;
-    userdata.fs_mgr_flags.quota = true;
-    userdata.fs_mgr_flags.late_mount = true;
-    userdata.fs_mgr_flags.formattable = true;
-    return userdata;
-}
+//     FstabEntry userdata = {
+//             .blk_device = "userdata_gsi",
+//             .mount_point = "/data",
+//             .fs_type = "ext4",
+//             .flags = kFlags,
+//             .reserved_size = 128 * 1024 * 1024,
+//     };
+//     userdata.fs_mgr_flags.wait = true;
+//     userdata.fs_mgr_flags.check = true;
+//     userdata.fs_mgr_flags.logical = true;
+//     userdata.fs_mgr_flags.quota = true;
+//     userdata.fs_mgr_flags.late_mount = true;
+//     userdata.fs_mgr_flags.formattable = true;
+//     return userdata;
+// }
 
-bool EraseFstabEntry(Fstab* fstab, const std::string& mount_point) {
-    auto iter = std::remove_if(fstab->begin(), fstab->end(),
-                               [&](const auto& entry) { return entry.mount_point == mount_point; });
-    if (iter != fstab->end()) {
-        fstab->erase(iter, fstab->end());
-        return true;
-    }
-    return false;
-}
+// bool EraseFstabEntry(Fstab* fstab, const std::string& mount_point) {
+//     auto iter = std::remove_if(fstab->begin(), fstab->end(),
+//                                [&](const auto& entry) { return entry.mount_point == mount_point; });
+//     if (iter != fstab->end()) {
+//         fstab->erase(iter, fstab->end());
+//         return true;
+//     }
+//     return false;
+// }
 
 template <typename Pred>
 std::vector<FstabEntry*> GetEntriesByPred(Fstab* fstab, const Pred& pred) {
@@ -610,98 +610,98 @@ bool ParseFstabFromString(const std::string& fstab_str, bool proc_mounts, Fstab*
     return true;
 }
 
-void TransformFstabForDsu(Fstab* fstab, const std::string& dsu_slot,
-                          const std::vector<std::string>& dsu_partitions) {
-    static constexpr char kDsuKeysDir[] = "/avb";
-    // Convert userdata
-    // Inherit fstab properties for userdata.
-    FstabEntry userdata;
-    if (FstabEntry* entry = GetEntryForMountPoint(fstab, "/data")) {
-        userdata = *entry;
-        userdata.blk_device = android::gsi::kDsuUserdata;
-        userdata.fs_mgr_flags.logical = true;
-        userdata.fs_mgr_flags.formattable = true;
-        if (!userdata.metadata_key_dir.empty()) {
-            userdata.metadata_key_dir = android::gsi::GetDsuMetadataKeyDir(dsu_slot);
-        }
-    } else {
-        userdata = BuildDsuUserdataFstabEntry();
-    }
+// void TransformFstabForDsu(Fstab* fstab, const std::string& dsu_slot,
+//                           const std::vector<std::string>& dsu_partitions) {
+//     static constexpr char kDsuKeysDir[] = "/avb";
+//     // Convert userdata
+//     // Inherit fstab properties for userdata.
+//     FstabEntry userdata;
+//     if (FstabEntry* entry = GetEntryForMountPoint(fstab, "/data")) {
+//         userdata = *entry;
+//         userdata.blk_device = android::gsi::kDsuUserdata;
+//         userdata.fs_mgr_flags.logical = true;
+//         userdata.fs_mgr_flags.formattable = true;
+//         if (!userdata.metadata_key_dir.empty()) {
+//             userdata.metadata_key_dir = android::gsi::GetDsuMetadataKeyDir(dsu_slot);
+//         }
+//     } else {
+//         userdata = BuildDsuUserdataFstabEntry();
+//     }
 
-    // Convert RO partitions.
-    for (auto&& partition : dsu_partitions) {
-        if (!EndsWith(partition, gsi::kDsuPostfix)) {
-            continue;
-        }
-        // userdata has been handled
-        if (partition == android::gsi::kDsuUserdata) {
-            continue;
-        }
-        // scratch is handled by fs_mgr_overlayfs
-        if (partition == android::gsi::kDsuScratch) {
-            continue;
-        }
-        // dsu_partition_name = corresponding_partition_name + kDsuPostfix
-        // e.g.
-        //    system_gsi for system
-        //    product_gsi for product
-        //    vendor_gsi for vendor
-        std::string lp_name = partition.substr(0, partition.length() - strlen(gsi::kDsuPostfix));
-        std::string mount_point = "/" + lp_name;
+//     // Convert RO partitions.
+//     for (auto&& partition : dsu_partitions) {
+//         if (!EndsWith(partition, gsi::kDsuPostfix)) {
+//             continue;
+//         }
+//         // userdata has been handled
+//         if (partition == android::gsi::kDsuUserdata) {
+//             continue;
+//         }
+//         // scratch is handled by fs_mgr_overlayfs
+//         if (partition == android::gsi::kDsuScratch) {
+//             continue;
+//         }
+//         // dsu_partition_name = corresponding_partition_name + kDsuPostfix
+//         // e.g.
+//         //    system_gsi for system
+//         //    product_gsi for product
+//         //    vendor_gsi for vendor
+//         std::string lp_name = partition.substr(0, partition.length() - strlen(gsi::kDsuPostfix));
+//         std::string mount_point = "/" + lp_name;
 
-        // List of fs_type entries we're lacking, need to synthesis these later.
-        std::vector<std::string> lack_fs_list = {"ext4", "erofs"};
+//         // List of fs_type entries we're lacking, need to synthesis these later.
+//         std::vector<std::string> lack_fs_list = {"ext4", "erofs"};
 
-        // Only support early mount (first_stage_mount) partitions.
-        auto pred = [&mount_point](const FstabEntry& entry) {
-            return entry.fs_mgr_flags.first_stage_mount && entry.mount_point == mount_point;
-        };
+//         // Only support early mount (first_stage_mount) partitions.
+//         auto pred = [&mount_point](const FstabEntry& entry) {
+//             return entry.fs_mgr_flags.first_stage_mount && entry.mount_point == mount_point;
+//         };
 
-        // Transform all matching entries and assume they are all adjacent for simplicity.
-        for (auto&& entry : GetEntriesByPred(fstab, pred)) {
-            // .blk_device is replaced with the DSU partition.
-            entry->blk_device = partition;
-            // .avb_keys hints first_stage_mount to load the chained-vbmeta image from partition
-            // footer. See aosp/932779 for more details.
-            entry->avb_keys = kDsuKeysDir;
-            // .logical_partition_name is required to look up AVB Hashtree descriptors.
-            entry->logical_partition_name = lp_name;
-            entry->fs_mgr_flags.logical = true;
-            entry->fs_mgr_flags.slot_select = false;
-            entry->fs_mgr_flags.slot_select_other = false;
+//         // Transform all matching entries and assume they are all adjacent for simplicity.
+//         for (auto&& entry : GetEntriesByPred(fstab, pred)) {
+//             // .blk_device is replaced with the DSU partition.
+//             entry->blk_device = partition;
+//             // .avb_keys hints first_stage_mount to load the chained-vbmeta image from partition
+//             // footer. See aosp/932779 for more details.
+//             entry->avb_keys = kDsuKeysDir;
+//             // .logical_partition_name is required to look up AVB Hashtree descriptors.
+//             entry->logical_partition_name = lp_name;
+//             entry->fs_mgr_flags.logical = true;
+//             entry->fs_mgr_flags.slot_select = false;
+//             entry->fs_mgr_flags.slot_select_other = false;
 
-            if (auto it = std::find(lack_fs_list.begin(), lack_fs_list.end(), entry->fs_type);
-                it != lack_fs_list.end()) {
-                lack_fs_list.erase(it);
-            }
-        }
+//             if (auto it = std::find(lack_fs_list.begin(), lack_fs_list.end(), entry->fs_type);
+//                 it != lack_fs_list.end()) {
+//                 lack_fs_list.erase(it);
+//             }
+//         }
 
-        if (!lack_fs_list.empty()) {
-            // Insert at the end of the existing mountpoint group, or at the end of fstab.
-            // We assume there is at most one matching mountpoint group, which is the common case.
-            auto it = std::find_if_not(std::find_if(fstab->begin(), fstab->end(), pred),
-                                       fstab->end(), pred);
-            for (const auto& fs_type : lack_fs_list) {
-                it = std::next(fstab->insert(it, {.blk_device = partition,
-                                                  .logical_partition_name = lp_name,
-                                                  .mount_point = mount_point,
-                                                  .fs_type = fs_type,
-                                                  .flags = MS_RDONLY,
-                                                  .avb_keys = kDsuKeysDir,
-                                                  .fs_mgr_flags{
-                                                          .wait = true,
-                                                          .logical = true,
-                                                          .first_stage_mount = true,
-                                                  }}));
-            }
-        }
-    }
+//         if (!lack_fs_list.empty()) {
+//             // Insert at the end of the existing mountpoint group, or at the end of fstab.
+//             // We assume there is at most one matching mountpoint group, which is the common case.
+//             auto it = std::find_if_not(std::find_if(fstab->begin(), fstab->end(), pred),
+//                                        fstab->end(), pred);
+//             for (const auto& fs_type : lack_fs_list) {
+//                 it = std::next(fstab->insert(it, {.blk_device = partition,
+//                                                   .logical_partition_name = lp_name,
+//                                                   .mount_point = mount_point,
+//                                                   .fs_type = fs_type,
+//                                                   .flags = MS_RDONLY,
+//                                                   .avb_keys = kDsuKeysDir,
+//                                                   .fs_mgr_flags{
+//                                                           .wait = true,
+//                                                           .logical = true,
+//                                                           .first_stage_mount = true,
+//                                                   }}));
+//             }
+//         }
+//     }
 
-    // Always append userdata last for stable ordering.
-    if (EraseFstabEntry(fstab, "/data")) {
-        fstab->emplace_back(userdata);
-    }
-}
+//     // Always append userdata last for stable ordering.
+//     if (EraseFstabEntry(fstab, "/data")) {
+//         fstab->emplace_back(userdata);
+//     }
+// }
 
 void EnableMandatoryFlags(Fstab* fstab) {
     // Devices launched in R and after must support fs_verity. Set flag to cause tune2fs
@@ -741,22 +741,22 @@ bool ReadFstabFromFile(const std::string& path, Fstab* fstab_out) {
         return false;
     }
     if (!is_proc_mounts) {
-        if (!access(android::gsi::kGsiBootedIndicatorFile, F_OK)) {
-            std::string dsu_slot;
-            if (!android::gsi::GetActiveDsu(&dsu_slot)) {
-                PERROR << __FUNCTION__ << "(): failed to get active DSU slot";
-                return false;
-            }
-            std::string lp_names;
-            if (!ReadFileToString(gsi::kGsiLpNamesFile, &lp_names)) {
-                PERROR << __FUNCTION__ << "(): failed to read DSU LP names";
-                return false;
-            }
-            TransformFstabForDsu(&fstab, dsu_slot, Split(lp_names, ","));
-        } else if (errno != ENOENT) {
-            PERROR << __FUNCTION__ << "(): failed to access() DSU booted indicator";
-            return false;
-        }
+        // if (!access(android::gsi::kGsiBootedIndicatorFile, F_OK)) {
+        //     std::string dsu_slot;
+        //     if (!android::gsi::GetActiveDsu(&dsu_slot)) {
+        //         PERROR << __FUNCTION__ << "(): failed to get active DSU slot";
+        //         return false;
+        //     }
+        //     std::string lp_names;
+        //     if (!ReadFileToString(gsi::kGsiLpNamesFile, &lp_names)) {
+        //         PERROR << __FUNCTION__ << "(): failed to read DSU LP names";
+        //         return false;
+        //     }
+        //     TransformFstabForDsu(&fstab, dsu_slot, Split(lp_names, ","));
+        // } else if (errno != ENOENT) {
+        //     PERROR << __FUNCTION__ << "(): failed to access() DSU booted indicator";
+        //     return false;
+        // }
     }
 
     SkipMountingPartitions(&fstab, false /* verbose */);

@@ -59,10 +59,10 @@
 #include <ext4_utils/ext4_sb.h>
 #include <ext4_utils/ext4_utils.h>
 #include <ext4_utils/wipe.h>
-#include <fs_avb/fs_avb.h>
+// #include <fs_avb/fs_avb.h>
 #include <fs_mgr/file_wait.h>
 #include <fs_mgr_overlayfs.h>
-#include <fscrypt/fscrypt.h>
+// #include <fscrypt/fscrypt.h>
 #include <libdm/dm.h>
 #include <libdm/loop_control.h>
 #include <liblp/metadata_format.h>
@@ -458,20 +458,20 @@ static void tune_encrypt(const std::string& blk_device, const FstabEntry& entry,
     if ((sb->s_feature_incompat & cpu_to_le32(EXT4_FEATURE_INCOMPAT_ENCRYPT)) == 0) {
         features_needed.emplace_back("encrypt");
     }
-    android::fscrypt::EncryptionOptions options;
-    if (!android::fscrypt::ParseOptions(entry.encryption_options, &options)) {
-        LERROR << "Unable to parse encryption options on " << blk_device << ": "
-               << entry.encryption_options;
-        return;
-    }
-    if ((options.flags &
-         (FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 | FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32)) != 0) {
-        // We can only use this policy on ext4 if the "stable_inodes" feature
-        // is set on the filesystem, otherwise shrinking will break encrypted files.
-        if ((sb->s_feature_compat & cpu_to_le32(EXT4_FEATURE_COMPAT_STABLE_INODES)) == 0) {
-            features_needed.emplace_back("stable_inodes");
-        }
-    }
+    // android::fscrypt::EncryptionOptions options;
+    // if (!android::fscrypt::ParseOptions(entry.encryption_options, &options)) {
+    //     LERROR << "Unable to parse encryption options on " << blk_device << ": "
+    //            << entry.encryption_options;
+    //     return;
+    // }
+    // if ((options.flags &
+    //      (FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 | FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32)) != 0) {
+    //     // We can only use this policy on ext4 if the "stable_inodes" feature
+    //     // is set on the filesystem, otherwise shrinking will break encrypted files.
+    //     if ((sb->s_feature_compat & cpu_to_le32(EXT4_FEATURE_COMPAT_STABLE_INODES)) == 0) {
+    //         features_needed.emplace_back("stable_inodes");
+    //     }
+    // }
     if (features_needed.size() == 0) {
         return;
     }
@@ -1180,12 +1180,12 @@ class CheckpointManager {
                 // metadata-encrypted device with smaller blocks, we must not change this for
                 // devices shipped with Q or earlier unless they explicitly selected dm-default-key
                 // v2
-                unsigned int options_format_version = android::base::GetUintProperty<unsigned int>(
-                        "ro.crypto.dm_default_key.options_format.version",
-                        (android::fscrypt::GetFirstApiLevel() <= __ANDROID_API_Q__ ? 1 : 2));
-                if (options_format_version > 1) {
-                    bowTarget->SetBlockSize(4096);
-                }
+                // unsigned int options_format_version = android::base::GetUintProperty<unsigned int>(
+                //         "ro.crypto.dm_default_key.options_format.version",
+                //         (android::fscrypt::GetFirstApiLevel() <= __ANDROID_API_Q__ ? 1 : 2));
+                // if (options_format_version > 1) {
+                //     bowTarget->SetBlockSize(4096);
+                // }
 
                 if (!table.AddTarget(std::move(bowTarget))) {
                     LERROR << "Failed to add bow target";
@@ -1354,7 +1354,7 @@ MountAllResult fs_mgr_mount_all(Fstab* fstab, int mount_mode) {
     int encryptable = FS_MGR_MNTALL_DEV_NOT_ENCRYPTABLE;
     int error_count = 0;
     CheckpointManager checkpoint_manager;
-    AvbUniquePtr avb_handle(nullptr);
+    // AvbUniquePtr avb_handle(nullptr);
     bool wiped = false;
 
     bool userdata_mounted = false;
@@ -1430,30 +1430,30 @@ MountAllResult fs_mgr_mount_all(Fstab* fstab, int mount_mode) {
             continue;
         }
 
-        if (current_entry.fs_mgr_flags.avb) {
-            if (!avb_handle) {
-                avb_handle = AvbHandle::Open();
-                if (!avb_handle) {
-                    LERROR << "Failed to open AvbHandle";
-                    set_type_property(encryptable);
-                    return {FS_MGR_MNTALL_FAIL, userdata_mounted};
-                }
-            }
-            if (avb_handle->SetUpAvbHashtree(&current_entry, true /* wait_for_verity_dev */) ==
-                AvbHashtreeResult::kFail) {
-                LERROR << "Failed to set up AVB on partition: " << current_entry.mount_point
-                       << ", skipping!";
-                // Skips mounting the device.
-                continue;
-            }
-        } else if (!current_entry.avb_keys.empty()) {
-            if (AvbHandle::SetUpStandaloneAvbHashtree(&current_entry) == AvbHashtreeResult::kFail) {
-                LERROR << "Failed to set up AVB on standalone partition: "
-                       << current_entry.mount_point << ", skipping!";
-                // Skips mounting the device.
-                continue;
-            }
-        }
+        // if (current_entry.fs_mgr_flags.avb) {
+        //     if (!avb_handle) {
+        //         avb_handle = AvbHandle::Open();
+        //         if (!avb_handle) {
+        //             LERROR << "Failed to open AvbHandle";
+        //             set_type_property(encryptable);
+        //             return {FS_MGR_MNTALL_FAIL, userdata_mounted};
+        //         }
+        //     }
+        //     if (avb_handle->SetUpAvbHashtree(&current_entry, true /* wait_for_verity_dev */) ==
+        //         AvbHashtreeResult::kFail) {
+        //         LERROR << "Failed to set up AVB on partition: " << current_entry.mount_point
+        //                << ", skipping!";
+        //         // Skips mounting the device.
+        //         continue;
+        //     }
+        // } else if (!current_entry.avb_keys.empty()) {
+        //     if (AvbHandle::SetUpStandaloneAvbHashtree(&current_entry) == AvbHashtreeResult::kFail) {
+        //         LERROR << "Failed to set up AVB on standalone partition: "
+        //                << current_entry.mount_point << ", skipping!";
+        //         // Skips mounting the device.
+        //         continue;
+        //     }
+        // }
 
         int last_idx_inspected;
         int top_idx = i;
@@ -1590,7 +1590,7 @@ MountAllResult fs_mgr_mount_all(Fstab* fstab, int mount_mode) {
 }
 
 int fs_mgr_umount_all(android::fs_mgr::Fstab* fstab) {
-    AvbUniquePtr avb_handle(nullptr);
+    // AvbUniquePtr avb_handle(nullptr);
     int ret = FsMgrUmountStatus::SUCCESS;
     for (auto& current_entry : *fstab) {
         if (!IsMountPointMounted(current_entry.mount_point)) {
@@ -1611,13 +1611,13 @@ int fs_mgr_umount_all(android::fs_mgr::Fstab* fstab) {
             }
         }
 
-        if (current_entry.fs_mgr_flags.avb || !current_entry.avb_keys.empty()) {
-            if (!AvbHandle::TearDownAvbHashtree(&current_entry, true /* wait */)) {
-                LERROR << "Failed to tear down AVB on mount point: " << current_entry.mount_point;
-                ret |= FsMgrUmountStatus::ERROR_VERITY;
-                continue;
-            }
-        }
+        // if (current_entry.fs_mgr_flags.avb || !current_entry.avb_keys.empty()) {
+        //     if (!AvbHandle::TearDownAvbHashtree(&current_entry, true /* wait */)) {
+        //         LERROR << "Failed to tear down AVB on mount point: " << current_entry.mount_point;
+        //         ret |= FsMgrUmountStatus::ERROR_VERITY;
+        //         continue;
+        //     }
+        // }
     }
     return ret;
 }
@@ -1842,7 +1842,7 @@ static int fs_mgr_do_mount_helper(Fstab* fstab, const std::string& n_name,
     int first_mount_errno = 0;
     std::string mount_point;
     CheckpointManager checkpoint_manager(needs_checkpoint, metadata_encrypted);
-    AvbUniquePtr avb_handle(nullptr);
+    // AvbUniquePtr avb_handle(nullptr);
 
     if (!fstab) {
         return FS_MGR_DOMNT_FAILED;
@@ -1891,29 +1891,29 @@ static int fs_mgr_do_mount_helper(Fstab* fstab, const std::string& n_name,
 
         int fs_stat = prepare_fs_for_mount(n_blk_device, fstab_entry, mount_point);
 
-        if (fstab_entry.fs_mgr_flags.avb) {
-            if (!avb_handle) {
-                avb_handle = AvbHandle::Open();
-                if (!avb_handle) {
-                    LERROR << "Failed to open AvbHandle";
-                    return FS_MGR_DOMNT_FAILED;
-                }
-            }
-            if (avb_handle->SetUpAvbHashtree(&fstab_entry, true /* wait_for_verity_dev */) ==
-                AvbHashtreeResult::kFail) {
-                LERROR << "Failed to set up AVB on partition: " << fstab_entry.mount_point
-                       << ", skipping!";
-                // Skips mounting the device.
-                continue;
-            }
-        } else if (!fstab_entry.avb_keys.empty()) {
-            if (AvbHandle::SetUpStandaloneAvbHashtree(&fstab_entry) == AvbHashtreeResult::kFail) {
-                LERROR << "Failed to set up AVB on standalone partition: "
-                       << fstab_entry.mount_point << ", skipping!";
-                // Skips mounting the device.
-                continue;
-            }
-        }
+        // if (fstab_entry.fs_mgr_flags.avb) {
+        //     if (!avb_handle) {
+        //         avb_handle = AvbHandle::Open();
+        //         if (!avb_handle) {
+        //             LERROR << "Failed to open AvbHandle";
+        //             return FS_MGR_DOMNT_FAILED;
+        //         }
+        //     }
+        //     if (avb_handle->SetUpAvbHashtree(&fstab_entry, true /* wait_for_verity_dev */) ==
+        //         AvbHashtreeResult::kFail) {
+        //         LERROR << "Failed to set up AVB on partition: " << fstab_entry.mount_point
+        //                << ", skipping!";
+        //         // Skips mounting the device.
+        //         continue;
+        //     }
+        // } else if (!fstab_entry.avb_keys.empty()) {
+        //     if (AvbHandle::SetUpStandaloneAvbHashtree(&fstab_entry) == AvbHashtreeResult::kFail) {
+        //         LERROR << "Failed to set up AVB on standalone partition: "
+        //                << fstab_entry.mount_point << ", skipping!";
+        //         // Skips mounting the device.
+        //         continue;
+        //     }
+        // }
 
         int retry_count = 2;
         while (retry_count-- > 0) {

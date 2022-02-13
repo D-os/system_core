@@ -39,7 +39,7 @@
 #include <android-base/strings.h>
 #include <android-base/unique_fd.h>
 #include <fs_mgr/file_wait.h>
-#include <liblp/reader.h>
+#include "liblp/reader.h"
 
 #include "fs_mgr_priv.h"
 

@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <android-base/unique_fd.h>
-#include <cgroup_map.h>
+#include "cgroup_map.h"
 
 class IProfileAttribute {
   public:

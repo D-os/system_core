@@ -23,7 +23,7 @@
 
 #include <android-base/logging.h>
 #include <android-base/threads.h>
-#include <cgroup_map.h>
+#include "cgroup_map.h"
 #include <processgroup/processgroup.h>
 
 using android::base::GetThreadId;

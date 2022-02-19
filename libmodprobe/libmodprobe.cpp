@@ -33,9 +33,7 @@
 #include <android-base/strings.h>
 #include <android-base/unique_fd.h>
 
-#if !defined(__GLIBC__)
-#define basename(src) (strrchr(src,'/') ? strrchr(src,'/')+1 : src)
-#endif
+#include <basename.h>
 
 std::string Modprobe::MakeCanonical(const std::string& module_path) {
     auto start = module_path.find_last_of('/');

@@ -26,11 +26,11 @@
 #include <android-base/logging.h>
 #include <android-base/parseint.h>
 #include <android-base/strings.h>
-#include <hidl-util/FQName.h>
+// #include <hidl-util/FQName.h>
 #include <processgroup/processgroup.h>
 #include <system/thread_defs.h>
 
-#include "lmkd_service.h"
+// #include "lmkd_service.h"
 #include "rlimit_parser.h"
 #include "service_utils.h"
 #include "util.h"
@@ -39,7 +39,7 @@
 #include <android/api-level.h>
 #include <sys/system_properties.h>
 
-#include "selinux.h"
+// #include "selinux.h"
 #else
 #include "host_init_stubs.h"
 #endif
@@ -173,8 +173,8 @@ Result<void> ServiceParser::ParsePriority(std::vector<std::string>&& args) {
     if (!ParseInt(args[1], &service_->proc_attr_.priority,
                   static_cast<int>(ANDROID_PRIORITY_HIGHEST),  // highest is negative
                   static_cast<int>(ANDROID_PRIORITY_LOWEST))) {
-        return Errorf("process priority value must be range {} - {}", ANDROID_PRIORITY_HIGHEST,
-                      ANDROID_PRIORITY_LOWEST);
+        return Errorf("process priority value must be range {} - {}", int(ANDROID_PRIORITY_HIGHEST),
+                      int(ANDROID_PRIORITY_LOWEST));
     }
     return {};
 }
@@ -184,21 +184,21 @@ Result<void> ServiceParser::ParseInterface(std::vector<std::string>&& args) {
     const std::string& instance_name = args[2];
 
     // AIDL services don't use fully qualified names and instead just use "interface aidl <name>"
-    if (interface_name != "aidl") {
-        FQName fq_name;
-        if (!FQName::parse(interface_name, &fq_name)) {
-            return Error() << "Invalid fully-qualified name for interface '" << interface_name
-                           << "'";
-        }
+    // if (interface_name != "aidl") {
+    //     FQName fq_name;
+    //     if (!FQName::parse(interface_name, &fq_name)) {
+    //         return Error() << "Invalid fully-qualified name for interface '" << interface_name
+    //                        << "'";
+    //     }
 
-        if (!fq_name.isFullyQualified()) {
-            return Error() << "Interface name not fully-qualified '" << interface_name << "'";
-        }
+    //     if (!fq_name.isFullyQualified()) {
+    //         return Error() << "Interface name not fully-qualified '" << interface_name << "'";
+    //     }
 
-        if (fq_name.isValidValueName()) {
-            return Error() << "Interface name must not be a value name '" << interface_name << "'";
-        }
-    }
+    //     if (fq_name.isValidValueName()) {
+    //         return Error() << "Interface name must not be a value name '" << interface_name << "'";
+    //     }
+    // }
 
     const std::string fullname = interface_name + "/" + instance_name;
 
@@ -295,14 +295,14 @@ Result<void> ServiceParser::ParseNamespace(std::vector<std::string>&& args) {
     return {};
 }
 
-Result<void> ServiceParser::ParseOomScoreAdjust(std::vector<std::string>&& args) {
-    if (!ParseInt(args[1], &service_->oom_score_adjust_, MIN_OOM_SCORE_ADJUST,
-                  MAX_OOM_SCORE_ADJUST)) {
-        return Error() << "oom_score_adjust value must be in range " << MIN_OOM_SCORE_ADJUST
-                       << " - +" << MAX_OOM_SCORE_ADJUST;
-    }
-    return {};
-}
+// Result<void> ServiceParser::ParseOomScoreAdjust(std::vector<std::string>&& args) {
+//     if (!ParseInt(args[1], &service_->oom_score_adjust_, MIN_OOM_SCORE_ADJUST,
+//                   MAX_OOM_SCORE_ADJUST)) {
+//         return Error() << "oom_score_adjust value must be in range " << MIN_OOM_SCORE_ADJUST
+//                        << " - +" << MAX_OOM_SCORE_ADJUST;
+//     }
+//     return {};
+// }
 
 Result<void> ServiceParser::ParseOverride(std::vector<std::string>&& args) {
     service_->override_ = true;
@@ -371,10 +371,10 @@ Result<void> ServiceParser::ParseRestartPeriod(std::vector<std::string>&& args) 
     return {};
 }
 
-Result<void> ServiceParser::ParseSeclabel(std::vector<std::string>&& args) {
-    service_->seclabel_ = std::move(args[1]);
-    return {};
-}
+// Result<void> ServiceParser::ParseSeclabel(std::vector<std::string>&& args) {
+//     service_->seclabel_ = std::move(args[1]);
+//     return {};
+// }
 
 Result<void> ServiceParser::ParseSigstop(std::vector<std::string>&& args) {
     service_->sigstop_ = true;
@@ -594,13 +594,13 @@ const KeywordMap<ServiceParser::OptionParser>& ServiceParser::GetParserMap() con
         {"namespace",               {1,     2,    &ServiceParser::ParseNamespace}},
         {"oneshot",                 {0,     0,    &ServiceParser::ParseOneshot}},
         {"onrestart",               {1,     kMax, &ServiceParser::ParseOnrestart}},
-        {"oom_score_adjust",        {1,     1,    &ServiceParser::ParseOomScoreAdjust}},
+        // {"oom_score_adjust",        {1,     1,    &ServiceParser::ParseOomScoreAdjust}},
         {"override",                {0,     0,    &ServiceParser::ParseOverride}},
         {"priority",                {1,     1,    &ServiceParser::ParsePriority}},
         {"reboot_on_failure",       {1,     1,    &ServiceParser::ParseRebootOnFailure}},
         {"restart_period",          {1,     1,    &ServiceParser::ParseRestartPeriod}},
         {"rlimit",                  {3,     3,    &ServiceParser::ParseProcessRlimit}},
-        {"seclabel",                {1,     1,    &ServiceParser::ParseSeclabel}},
+        // {"seclabel",                {1,     1,    &ServiceParser::ParseSeclabel}},
         {"setenv",                  {2,     2,    &ServiceParser::ParseSetenv}},
         {"shutdown",                {1,     1,    &ServiceParser::ParseShutdown}},
         {"sigstop",                 {0,     0,    &ServiceParser::ParseSigstop}},
@@ -636,16 +636,16 @@ Result<void> ServiceParser::ParseSection(std::vector<std::string>&& args,
 
     std::vector<std::string> str_args(args.begin() + 2, args.end());
 
-    if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_P__) {
-        if (str_args[0] == "/sbin/watchdogd") {
-            str_args[0] = "/system/bin/watchdogd";
-        }
-    }
-    if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
-        if (str_args[0] == "/charger") {
-            str_args[0] = "/system/bin/charger";
-        }
-    }
+    // if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_P__) {
+    //     if (str_args[0] == "/sbin/watchdogd") {
+    //         str_args[0] = "/system/bin/watchdogd";
+    //     }
+    // }
+    // if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
+    //     if (str_args[0] == "/charger") {
+    //         str_args[0] = "/system/bin/charger";
+    //     }
+    // }
 
     service_ = std::make_unique<Service>(name, restart_action_subcontext, str_args, from_apex_);
     return {};
@@ -668,20 +668,20 @@ Result<void> ServiceParser::EndSection() {
         return {};
     }
 
-    if (interface_inheritance_hierarchy_) {
-        if (const auto& check_hierarchy_result = CheckInterfaceInheritanceHierarchy(
-                    service_->interfaces(), *interface_inheritance_hierarchy_);
-            !check_hierarchy_result.ok()) {
-            return Error() << check_hierarchy_result.error();
-        }
-    }
+    // if (interface_inheritance_hierarchy_) {
+    //     if (const auto& check_hierarchy_result = CheckInterfaceInheritanceHierarchy(
+    //                 service_->interfaces(), *interface_inheritance_hierarchy_);
+    //         !check_hierarchy_result.ok()) {
+    //         return Error() << check_hierarchy_result.error();
+    //     }
+    // }
 
-    if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
+    // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
         if ((service_->flags() & SVC_CRITICAL) != 0 && (service_->flags() & SVC_ONESHOT) != 0) {
             return Error() << "service '" << service_->name()
                            << "' can't be both critical and oneshot";
         }
-    }
+    // }
 
     Service* old_service = service_list_->FindService(service_->name());
     if (old_service) {

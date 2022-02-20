@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/perf_event.h>
-#include <selinux/selinux.h>
+// #include <selinux/selinux.h>
 #include <sys/ioctl.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -175,13 +175,13 @@ Result<void> TestPerfEventSelinuxAction(const BuiltinArguments&) {
     // perf_event_paranoid sysctl. The sysprop is reused for pragmatic reasons,
     // as there no existing way for init rules to check for permissive boot at
     // the time of writing.
-    if (ALLOW_PERMISSIVE_SELINUX) {
-        if (!security_getenforce()) {
-            LOG(INFO) << "Permissive SELinux boot, forcing sys.init.perf_lsm_hooks to 1.";
-            SetProperty("sys.init.perf_lsm_hooks", "1");
-            return {};
-        }
-    }
+    // if (ALLOW_PERMISSIVE_SELINUX) {
+    //     if (!security_getenforce()) {
+    //         LOG(INFO) << "Permissive SELinux boot, forcing sys.init.perf_lsm_hooks to 1.";
+    //         SetProperty("sys.init.perf_lsm_hooks", "1");
+    //         return {};
+    //     }
+    // }
 
     // Use a trivial event that will be configured, but not started.
     struct perf_event_attr pe = {

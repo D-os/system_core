@@ -48,16 +48,16 @@
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
 #include <android-base/strings.h>
-#include <fs_avb/fs_avb.h>
-#include <fs_mgr_vendor_overlay.h>
-#include <keyutils.h>
-#include <libavb/libavb.h>
-#include <libgsi/libgsi.h>
-#include <libsnapshot/snapshot.h>
+// #include <fs_avb/fs_avb.h>
+// #include <fs_mgr_vendor_overlay.h>
+// #include <keyutils.h>
+// #include <libavb/libavb.h>
+// #include <libgsi/libgsi.h>
+// #include <libsnapshot/snapshot.h>
 #include <processgroup/processgroup.h>
 #include <processgroup/setup.h>
-#include <selinux/android.h>
-#include <unwindstack/AndroidUnwinder.h>
+// #include <selinux/android.h>
+// #include <unwindstack/AndroidUnwinder.h>
 
 #include "action_parser.h"
 #include "builtins.h"
@@ -65,8 +65,8 @@
 #include "first_stage_init.h"
 #include "first_stage_mount.h"
 #include "import_parser.h"
-#include "keychords.h"
-#include "lmkd_service.h"
+// #include "keychords.h"
+// #include "lmkd_service.h"
 #include "mount_handler.h"
 #include "mount_namespace.h"
 #include "property_service.h"
@@ -75,19 +75,19 @@
 #include "reboot_utils.h"
 #include "second_stage_resources.h"
 #include "security.h"
-#include "selabel.h"
-#include "selinux.h"
+// #include "selabel.h"
+// #include "selinux.h"
 #include "service.h"
 #include "service_parser.h"
 #include "sigchld_handler.h"
-#include "snapuserd_transition.h"
+// #include "snapuserd_transition.h"
 #include "subcontext.h"
 #include "system/core/init/property_service.pb.h"
 #include "util.h"
 
-#ifndef RECOVERY
-#include "com_android_apex.h"
-#endif  // RECOVERY
+// #ifndef RECOVERY
+// #include "com_android_apex.h"
+// #endif  // RECOVERY
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -100,8 +100,8 @@ using android::base::SetProperty;
 using android::base::StringPrintf;
 using android::base::Timer;
 using android::base::Trim;
-using android::fs_mgr::AvbHandle;
-using android::snapshot::SnapshotManager;
+// using android::fs_mgr::AvbHandle;
+// using android::snapshot::SnapshotManager;
 
 namespace android {
 namespace init {
@@ -273,11 +273,11 @@ void DebugRebootLogging() {
               << " IsShuttingDown: " << IsShuttingDown();
     if (shutdown_state.do_shutdown()) {
         LOG(ERROR) << "sys.powerctl set while a previous shutdown command has not been handled";
-        UnwindMainThreadStack();
+        // UnwindMainThreadStack();
     }
     if (IsShuttingDown()) {
         LOG(ERROR) << "sys.powerctl set while init is already shutting down";
-        UnwindMainThreadStack();
+        // UnwindMainThreadStack();
     }
 }
 
@@ -290,63 +290,63 @@ Parser CreateParser(ActionManager& action_manager, ServiceList& service_list) {
     Parser parser;
 
     parser.AddSectionParser("service", std::make_unique<ServiceParser>(
-                                               &service_list, GetSubcontext(), std::nullopt));
+                                               &service_list, GetSubcontext()/*, std::nullopt*/));
     parser.AddSectionParser("on", std::make_unique<ActionParser>(&action_manager, GetSubcontext()));
     parser.AddSectionParser("import", std::make_unique<ImportParser>(&parser));
 
     return parser;
 }
 
-#ifndef RECOVERY
-template <typename T>
-struct LibXmlErrorHandler {
-    T handler_;
-    template <typename Handler>
-    LibXmlErrorHandler(Handler&& handler) : handler_(std::move(handler)) {
-        xmlSetGenericErrorFunc(nullptr, &ErrorHandler);
-    }
-    ~LibXmlErrorHandler() { xmlSetGenericErrorFunc(nullptr, nullptr); }
-    static void ErrorHandler(void*, const char* msg, ...) {
-        va_list args;
-        va_start(args, msg);
-        char* formatted;
-        if (vasprintf(&formatted, msg, args) >= 0) {
-            LOG(ERROR) << formatted;
-        }
-        free(formatted);
-        va_end(args);
-    }
-};
+// #ifndef RECOVERY
+// template <typename T>
+// struct LibXmlErrorHandler {
+//     T handler_;
+//     template <typename Handler>
+//     LibXmlErrorHandler(Handler&& handler) : handler_(std::move(handler)) {
+//         xmlSetGenericErrorFunc(nullptr, &ErrorHandler);
+//     }
+//     ~LibXmlErrorHandler() { xmlSetGenericErrorFunc(nullptr, nullptr); }
+//     static void ErrorHandler(void*, const char* msg, ...) {
+//         va_list args;
+//         va_start(args, msg);
+//         char* formatted;
+//         if (vasprintf(&formatted, msg, args) >= 0) {
+//             LOG(ERROR) << formatted;
+//         }
+//         free(formatted);
+//         va_end(args);
+//     }
+// };
 
-template <typename Handler>
-LibXmlErrorHandler(Handler&&) -> LibXmlErrorHandler<Handler>;
-#endif  // RECOVERY
+// template <typename Handler>
+// LibXmlErrorHandler(Handler&&) -> LibXmlErrorHandler<Handler>;
+// #endif  // RECOVERY
 
 // Returns a Parser that accepts scripts from APEX modules. It supports `service` and `on`.
 Parser CreateApexConfigParser(ActionManager& action_manager, ServiceList& service_list) {
     Parser parser;
     auto subcontext = GetSubcontext();
-#ifndef RECOVERY
-    if (subcontext) {
-        const auto apex_info_list_file = "/apex/apex-info-list.xml";
-        auto error_handler = LibXmlErrorHandler([&](const auto& error_message) {
-            LOG(ERROR) << "Failed to read " << apex_info_list_file << ":" << error_message;
-        });
-        const auto apex_info_list = com::android::apex::readApexInfoList(apex_info_list_file);
-        if (apex_info_list.has_value()) {
-            std::vector<std::string> subcontext_apexes;
-            for (const auto& info : apex_info_list->getApexInfo()) {
-                if (info.hasPreinstalledModulePath() &&
-                    subcontext->PathMatchesSubcontext(info.getPreinstalledModulePath())) {
-                    subcontext_apexes.push_back(info.getModuleName());
-                }
-            }
-            subcontext->SetApexList(std::move(subcontext_apexes));
-        }
-    }
-#endif  // RECOVERY
+// #ifndef RECOVERY
+//     if (subcontext) {
+//         const auto apex_info_list_file = "/apex/apex-info-list.xml";
+//         auto error_handler = LibXmlErrorHandler([&](const auto& error_message) {
+//             LOG(ERROR) << "Failed to read " << apex_info_list_file << ":" << error_message;
+//         });
+//         const auto apex_info_list = com::android::apex::readApexInfoList(apex_info_list_file);
+//         if (apex_info_list.has_value()) {
+//             std::vector<std::string> subcontext_apexes;
+//             for (const auto& info : apex_info_list->getApexInfo()) {
+//                 if (info.hasPreinstalledModulePath() &&
+//                     subcontext->PathMatchesSubcontext(info.getPreinstalledModulePath())) {
+//                     subcontext_apexes.push_back(info.getModuleName());
+//                 }
+//             }
+//             subcontext->SetApexList(std::move(subcontext_apexes));
+//         }
+//     }
+// #endif  // RECOVERY
     parser.AddSectionParser("service",
-                            std::make_unique<ServiceParser>(&service_list, subcontext, std::nullopt,
+                            std::make_unique<ServiceParser>(&service_list, subcontext, /*std::nullopt,*/
                                                             /*from_apex=*/true));
     parser.AddSectionParser("on", std::make_unique<ActionParser>(&action_manager, subcontext));
 
@@ -780,20 +780,20 @@ static void RecordStageBoottimes(const boot_clock::time_point& second_stage_star
     }
     unsetenv(kEnvFirstStageStartedAt);
 
-    int64_t selinux_start_time_ns = -1;
-    if (auto selinux_start_time_str = getenv(kEnvSelinuxStartedAt); selinux_start_time_str) {
-        android::base::ParseInt(selinux_start_time_str, &selinux_start_time_ns);
-    }
-    unsetenv(kEnvSelinuxStartedAt);
+    // int64_t selinux_start_time_ns = -1;
+    // if (auto selinux_start_time_str = getenv(kEnvSelinuxStartedAt); selinux_start_time_str) {
+    //     android::base::ParseInt(selinux_start_time_str, &selinux_start_time_ns);
+    // }
+    // unsetenv(kEnvSelinuxStartedAt);
 
-    if (selinux_start_time_ns == -1) return;
+    // if (selinux_start_time_ns == -1) return;
     if (first_stage_start_time_ns == -1) return;
 
     SetProperty("ro.boottime.init.first_stage",
-                std::to_string(selinux_start_time_ns - first_stage_start_time_ns));
-    SetProperty("ro.boottime.init.selinux",
-                std::to_string(second_stage_start_time.time_since_epoch().count() -
-                               selinux_start_time_ns));
+                std::to_string(/*selinux_start_time_ns -*/ first_stage_start_time_ns));
+    // SetProperty("ro.boottime.init.selinux",
+    //             std::to_string(second_stage_start_time.time_since_epoch().count() -
+    //                            selinux_start_time_ns));
     if (auto init_module_time_str = getenv(kEnvInitModuleDurationMs); init_module_time_str) {
         SetProperty("ro.boottime.init.modules", init_module_time_str);
         unsetenv(kEnvInitModuleDurationMs);
@@ -808,39 +808,39 @@ void SendLoadPersistentPropertiesMessage() {
     }
 }
 
-static Result<void> ConnectEarlyStageSnapuserdAction(const BuiltinArguments& args) {
-    auto pid = GetSnapuserdFirstStagePid();
-    if (!pid) {
-        return {};
-    }
+// static Result<void> ConnectEarlyStageSnapuserdAction(const BuiltinArguments& args) {
+//     auto pid = GetSnapuserdFirstStagePid();
+//     if (!pid) {
+//         return {};
+//     }
 
-    auto info = GetSnapuserdFirstStageInfo();
-    if (auto iter = std::find(info.begin(), info.end(), "socket"s); iter == info.end()) {
-        // snapuserd does not support socket handoff, so exit early.
-        return {};
-    }
+//     auto info = GetSnapuserdFirstStageInfo();
+//     if (auto iter = std::find(info.begin(), info.end(), "socket"s); iter == info.end()) {
+//         // snapuserd does not support socket handoff, so exit early.
+//         return {};
+//     }
 
-    // Socket handoff is supported.
-    auto svc = ServiceList::GetInstance().FindService("snapuserd");
-    if (!svc) {
-        LOG(FATAL) << "Failed to find snapuserd service entry";
-    }
+//     // Socket handoff is supported.
+//     auto svc = ServiceList::GetInstance().FindService("snapuserd");
+//     if (!svc) {
+//         LOG(FATAL) << "Failed to find snapuserd service entry";
+//     }
 
-    svc->SetShutdownCritical();
-    svc->SetStartedInFirstStage(*pid);
+//     svc->SetShutdownCritical();
+//     svc->SetStartedInFirstStage(*pid);
 
-    svc = ServiceList::GetInstance().FindService("snapuserd_proxy");
-    if (!svc) {
-        LOG(FATAL) << "Failed find snapuserd_proxy service entry, merge will never initiate";
-    }
-    if (!svc->MarkSocketPersistent("snapuserd")) {
-        LOG(FATAL) << "Could not find snapuserd socket in snapuserd_proxy service entry";
-    }
-    if (auto result = svc->Start(); !result.ok()) {
-        LOG(FATAL) << "Could not start snapuserd_proxy: " << result.error();
-    }
-    return {};
-}
+//     svc = ServiceList::GetInstance().FindService("snapuserd_proxy");
+//     if (!svc) {
+//         LOG(FATAL) << "Failed find snapuserd_proxy service entry, merge will never initiate";
+//     }
+//     if (!svc->MarkSocketPersistent("snapuserd")) {
+//         LOG(FATAL) << "Could not find snapuserd socket in snapuserd_proxy service entry";
+//     }
+//     if (auto result = svc->Start(); !result.ok()) {
+//         LOG(FATAL) << "Could not start snapuserd_proxy: " << result.error();
+//     }
+//     return {};
+// }
 
 int SecondStageMain(int argc, char** argv) {
     if (REBOOT_BOOTLOADER_ON_PANIC) {
@@ -875,29 +875,29 @@ int SecondStageMain(int argc, char** argv) {
         sigaction(SIGPIPE, &action, nullptr);
     }
 
-    // Set init and its forked children's oom_adj.
-    if (auto result =
-                WriteFile("/proc/1/oom_score_adj", StringPrintf("%d", DEFAULT_OOM_SCORE_ADJUST));
-        !result.ok()) {
-        LOG(ERROR) << "Unable to write " << DEFAULT_OOM_SCORE_ADJUST
-                   << " to /proc/1/oom_score_adj: " << result.error();
-    }
+    // // Set init and its forked children's oom_adj.
+    // if (auto result =
+    //             WriteFile("/proc/1/oom_score_adj", StringPrintf("%d", DEFAULT_OOM_SCORE_ADJUST));
+    //     !result.ok()) {
+    //     LOG(ERROR) << "Unable to write " << DEFAULT_OOM_SCORE_ADJUST
+    //                << " to /proc/1/oom_score_adj: " << result.error();
+    // }
 
     // Set up a session keyring that all processes will have access to. It
     // will hold things like FBE encryption keys. No process should override
     // its session keyring.
-    keyctl_get_keyring_ID(KEY_SPEC_SESSION_KEYRING, 1);
+    // keyctl_get_keyring_ID(KEY_SPEC_SESSION_KEYRING, 1);
 
     // Indicate that booting is in progress to background fw loaders, etc.
     close(open("/dev/.booting", O_WRONLY | O_CREAT | O_CLOEXEC, 0000));
 
     // See if need to load debug props to allow adb root, when the device is unlocked.
-    const char* force_debuggable_env = getenv("INIT_FORCE_DEBUGGABLE");
+    // const char* force_debuggable_env = getenv("INIT_FORCE_DEBUGGABLE");
     bool load_debug_prop = false;
-    if (force_debuggable_env && AvbHandle::IsDeviceUnlocked()) {
-        load_debug_prop = "true"s == force_debuggable_env;
-    }
-    unsetenv("INIT_FORCE_DEBUGGABLE");
+    // if (force_debuggable_env && AvbHandle::IsDeviceUnlocked()) {
+    //     load_debug_prop = "true"s == force_debuggable_env;
+    // }
+    // unsetenv("INIT_FORCE_DEBUGGABLE");
 
     // Umount the debug ramdisk so property service doesn't read .prop files from there, when it
     // is not meant to.
@@ -918,10 +918,10 @@ int SecondStageMain(int argc, char** argv) {
     // Mount extra filesystems required during second stage init
     MountExtraFilesystems();
 
-    // Now set up SELinux for second stage.
-    SelinuxSetupKernelLogging();
-    SelabelInitialize();
-    SelinuxRestoreContext();
+    // // Now set up SELinux for second stage.
+    // SelinuxSetupKernelLogging();
+    // SelabelInitialize();
+    // SelinuxRestoreContext();
 
     Epoll epoll;
     if (auto result = epoll.Open(); !result.ok()) {
@@ -941,7 +941,7 @@ int SecondStageMain(int argc, char** argv) {
     }
     unsetenv("INIT_AVB_VERSION");
 
-    fs_mgr_vendor_overlay_mount_all();
+    // fs_mgr_vendor_overlay_mount_all();
     export_oem_lock_status();
     MountHandler mount_handler(&epoll);
     SetUsbController();
@@ -966,31 +966,31 @@ int SecondStageMain(int argc, char** argv) {
     if (false) DumpState();
 
     // Make the GSI status available before scripts start running.
-    auto is_running = android::gsi::IsGsiRunning() ? "1" : "0";
-    SetProperty(gsi::kGsiBootedProp, is_running);
-    auto is_installed = android::gsi::IsGsiInstalled() ? "1" : "0";
-    SetProperty(gsi::kGsiInstalledProp, is_installed);
+    // auto is_running = android::gsi::IsGsiRunning() ? "1" : "0";
+    // SetProperty(gsi::kGsiBootedProp, is_running);
+    // auto is_installed = android::gsi::IsGsiInstalled() ? "1" : "0";
+    // SetProperty(gsi::kGsiInstalledProp, is_installed);
 
     am.QueueBuiltinAction(SetupCgroupsAction, "SetupCgroups");
     am.QueueBuiltinAction(SetKptrRestrictAction, "SetKptrRestrict");
     am.QueueBuiltinAction(TestPerfEventSelinuxAction, "TestPerfEventSelinux");
-    am.QueueBuiltinAction(ConnectEarlyStageSnapuserdAction, "ConnectEarlyStageSnapuserd");
+    // am.QueueBuiltinAction(ConnectEarlyStageSnapuserdAction, "ConnectEarlyStageSnapuserd");
     am.QueueEventTrigger("early-init");
 
     // Queue an action that waits for coldboot done so we know ueventd has set up all of /dev...
     am.QueueBuiltinAction(wait_for_coldboot_done_action, "wait_for_coldboot_done");
     // ... so that we can start queuing up actions that require stuff from /dev.
     am.QueueBuiltinAction(SetMmapRndBitsAction, "SetMmapRndBits");
-    Keychords keychords;
-    am.QueueBuiltinAction(
-            [&epoll, &keychords](const BuiltinArguments& args) -> Result<void> {
-                for (const auto& svc : ServiceList::GetInstance()) {
-                    keychords.Register(svc->keycodes());
-                }
-                keychords.Start(&epoll, HandleKeychord);
-                return {};
-            },
-            "KeychordInit");
+    // Keychords keychords;
+    // am.QueueBuiltinAction(
+    //         [&epoll, &keychords](const BuiltinArguments& args) -> Result<void> {
+    //             for (const auto& svc : ServiceList::GetInstance()) {
+    //                 keychords.Register(svc->keycodes());
+    //             }
+    //             keychords.Start(&epoll, HandleKeychord);
+    //             return {};
+    //         },
+    //         "KeychordInit");
 
     // Trigger all the boot actions to get us started.
     am.QueueEventTrigger("init");

@@ -26,7 +26,7 @@
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <android-base/strings.h>
-#include <selinux/android.h>
+// #include <selinux/android.h>
 
 #include "action.h"
 #include "builtins.h"
@@ -37,8 +37,8 @@
 #ifdef INIT_FULL_SOURCES
 #include <android/api-level.h>
 #include "property_service.h"
-#include "selabel.h"
-#include "selinux.h"
+// #include "selabel.h"
+// #include "selinux.h"
 #else
 #include "host_init_stubs.h"
 #endif
@@ -180,7 +180,7 @@ int SubcontextMain(int argc, char** argv, const BuiltinFunctionMap* function_map
     auto context = std::string(argv[2]);
     auto init_fd = std::atoi(argv[3]);
 
-    SelabelInitialize();
+    // SelabelInitialize();
 
     trigger_shutdown = [](const std::string& command) { shutdown_command = command; };
 
@@ -214,11 +214,11 @@ void Subcontext::Fork() {
 
         // We don't switch contexts if we're running the unit tests.  We don't use std::optional,
         // since we still need a real context string to pass to the builtin functions.
-        if (context_ != kTestContext) {
-            if (setexeccon(context_.c_str()) < 0) {
-                PLOG(FATAL) << "Could not set execcon for '" << context_ << "'";
-            }
-        }
+        // if (context_ != kTestContext) {
+        //     if (setexeccon(context_.c_str()) < 0) {
+        //         PLOG(FATAL) << "Could not set execcon for '" << context_ << "'";
+        //     }
+        // }
 #if defined(__ANDROID__)
         // subcontext init runs in "default" mount namespace
         // so that it can access /apex/*
@@ -354,10 +354,10 @@ void InitializeSubcontext() {
         return;
     }
 
-    if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_P__) {
+    // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_P__) {
         subcontext.reset(
                 new Subcontext(std::vector<std::string>{"/vendor", "/odm"}, kVendorContext));
-    }
+    // }
 }
 void InitializeHostSubcontext(std::vector<std::string> vendor_prefixes) {
     subcontext.reset(new Subcontext(vendor_prefixes, kVendorContext, /*host=*/true));

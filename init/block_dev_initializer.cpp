@@ -23,6 +23,8 @@
 
 #include "block_dev_initializer.h"
 
+#include "basename.h"
+
 namespace android {
 namespace init {
 

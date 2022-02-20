@@ -37,7 +37,7 @@
 #include <android-base/strings.h>
 #include <fs_mgr.h>
 #include <fstab/fstab.h>
-#include <libdm/dm.h>
+// #include <libdm/dm.h>
 
 #include "epoll.h"
 
@@ -52,18 +52,18 @@ namespace {
 MountHandlerEntry ParseMount(const std::string& line) {
     auto fields = android::base::Split(line, " ");
     while (fields.size() < 3) fields.emplace_back("");
-    if (fields[0] == "/dev/root") {
-        auto& dm = dm::DeviceMapper::Instance();
-        std::string path;
-        if (dm.GetDmDevicePathByName("system", &path) || dm.GetDmDevicePathByName("vroot", &path)) {
-            fields[0] = path;
-        } else if (android::fs_mgr::Fstab fstab; android::fs_mgr::ReadDefaultFstab(&fstab)) {
-            auto entry = GetEntryForMountPoint(&fstab, "/");
-            if (entry || (entry = GetEntryForMountPoint(&fstab, "/system"))) {
-                fields[0] = entry->blk_device;
-            }
-        }
-    }
+    // if (fields[0] == "/dev/root") {
+    //     auto& dm = dm::DeviceMapper::Instance();
+    //     std::string path;
+    //     if (dm.GetDmDevicePathByName("system", &path) || dm.GetDmDevicePathByName("vroot", &path)) {
+    //         fields[0] = path;
+    //     } else if (android::fs_mgr::Fstab fstab; android::fs_mgr::ReadDefaultFstab(&fstab)) {
+    //         auto entry = GetEntryForMountPoint(&fstab, "/");
+    //         if (entry || (entry = GetEntryForMountPoint(&fstab, "/system"))) {
+    //             fields[0] = entry->blk_device;
+    //         }
+    //     }
+    // }
     if (android::base::StartsWith(fields[0], "/dev/")) {
         if (std::string link; android::base::Readlink(fields[0], &link)) {
             fields[0] = link;
@@ -76,16 +76,16 @@ MountHandlerEntry ParseMount(const std::string& line) {
 std::string GetDiskPart(std::string blockdev) {
     if (blockdev.find('/') != std::string::npos) return {};
 
-    while (android::base::StartsWith(blockdev, "dm-")) {
-        auto& dm = dm::DeviceMapper::Instance();
-        std::optional<std::string> parent = dm.GetParentBlockDeviceByPath("/dev/block/" + blockdev);
-        if (parent) {
-            blockdev = android::base::Basename(*parent);
-        } else {
+    // while (android::base::StartsWith(blockdev, "dm-")) {
+    //     auto& dm = dm::DeviceMapper::Instance();
+    //     std::optional<std::string> parent = dm.GetParentBlockDeviceByPath("/dev/block/" + blockdev);
+    //     if (parent) {
+    //         blockdev = android::base::Basename(*parent);
+    //     } else {
             return {};
-        }
-    }
-    return blockdev;
+    //     }
+    // }
+    // return blockdev;
 }
 
 // return sda for sda25, or mmcblk0 for mmcblk0p24

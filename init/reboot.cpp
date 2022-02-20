@@ -18,7 +18,7 @@
 
 #include <dirent.h>
 #include <fcntl.h>
-#include <linux/f2fs.h>
+// #include <linux/f2fs.h>
 #include <linux/fs.h>
 #include <linux/loop.h>
 #include <mntent.h>
@@ -48,12 +48,12 @@
 #include <android-base/scopeguard.h>
 #include <android-base/strings.h>
 #include <android-base/unique_fd.h>
-#include <bootloader_message/bootloader_message.h>
+// #include <bootloader_message/bootloader_message.h>
 #include <cutils/android_reboot.h>
 #include <fs_mgr.h>
 #include <logwrap/logwrap.h>
 #include <private/android_filesystem_config.h>
-#include <selinux/selinux.h>
+// #include <selinux/selinux.h>
 
 #include "action.h"
 #include "action_manager.h"
@@ -264,13 +264,13 @@ static bool FindPartitionsToUmount(std::vector<MountEntry>* block_dev_partitions
 }
 
 static void DumpUmountDebuggingInfo() {
-    int status;
-    if (!security_getenforce()) {
-        LOG(INFO) << "Run lsof";
-        const char* lsof_argv[] = {"/system/bin/lsof"};
-        logwrap_fork_execvp(arraysize(lsof_argv), lsof_argv, &status, false, LOG_KLOG, true,
-                            nullptr);
-    }
+    // int status;
+    // if (!security_getenforce()) {
+    //     LOG(INFO) << "Run lsof";
+    //     const char* lsof_argv[] = {"/system/bin/lsof"};
+    //     logwrap_fork_execvp(arraysize(lsof_argv), lsof_argv, &status, false, LOG_KLOG, true,
+    //                         nullptr);
+    // }
     FindPartitionsToUmount(nullptr, nullptr, true);
     // dump current CPU stack traces and uninterruptible tasks
     WriteStringToFile("l", PROC_SYSRQ);
@@ -350,32 +350,32 @@ void RebootMonitorThread(unsigned int cmd, const std::string& reboot_target,
         LOG(INFO) << "shutdown_timeout_timespec.tv_sec: " << shutdown_timeout_timespec.tv_sec;
 
         int sem_return = 0;
-        while ((sem_return = sem_timedwait_monotonic_np(reboot_semaphore,
-                                                        &shutdown_timeout_timespec)) == -1 &&
-               errno == EINTR) {
-        }
+        // while ((sem_return = sem_timedwait_monotonic_np(reboot_semaphore,
+        //                                                 &shutdown_timeout_timespec)) == -1 &&
+        //        errno == EINTR) {
+        // }
 
         if (sem_return == -1) {
             LOG(ERROR) << "Reboot thread timed out";
 
-            if (android::base::GetBoolProperty("ro.debuggable", false) == true) {
-                if (false) {
-                    // SEPolicy will block debuggerd from running and this is intentional.
-                    // But these lines are left to be enabled during debugging.
-                    LOG(INFO) << "Try to dump init process call trace:";
-                    const char* vdc_argv[] = {"/system/bin/debuggerd", "-b", "1"};
-                    int status;
-                    logwrap_fork_execvp(arraysize(vdc_argv), vdc_argv, &status, false, LOG_KLOG,
-                                        true, nullptr);
-                }
-                LOG(INFO) << "Show stack for all active CPU:";
-                WriteStringToFile("l", PROC_SYSRQ);
+            // if (android::base::GetBoolProperty("ro.debuggable", false) == true) {
+            //     if (false) {
+            //         // SEPolicy will block debuggerd from running and this is intentional.
+            //         // But these lines are left to be enabled during debugging.
+            //         LOG(INFO) << "Try to dump init process call trace:";
+            //         const char* vdc_argv[] = {"/system/bin/debuggerd", "-b", "1"};
+            //         int status;
+            //         logwrap_fork_execvp(arraysize(vdc_argv), vdc_argv, &status, false, LOG_KLOG,
+            //                             true, nullptr);
+            //     }
+            //     LOG(INFO) << "Show stack for all active CPU:";
+            //     WriteStringToFile("l", PROC_SYSRQ);
 
-                LOG(INFO) << "Show tasks that are in disk sleep(uninterruptable sleep), which are "
-                             "like "
-                             "blocked in mutex or hardware register access:";
-                WriteStringToFile("w", PROC_SYSRQ);
-            }
+            //     LOG(INFO) << "Show tasks that are in disk sleep(uninterruptable sleep), which are "
+            //                  "like "
+            //                  "blocked in mutex or hardware register access:";
+            //     WriteStringToFile("w", PROC_SYSRQ);
+            // }
 
             // In shutdown case,notify kernel to sync and umount fs to read-only before shutdown.
             if (cmd == ANDROID_RB_POWEROFF || cmd == ANDROID_RB_THERMOFF) {
@@ -566,17 +566,17 @@ int StopServicesAndLogViolations(const std::set<std::string>& services,
     return still_running;
 }
 
-static Result<void> UnmountAllApexes() {
-    const char* args[] = {"/system/bin/apexd", "--unmount-all"};
-    int status;
-    if (logwrap_fork_execvp(arraysize(args), args, &status, false, LOG_KLOG, true, nullptr) != 0) {
-        return ErrnoError() << "Failed to call '/system/bin/apexd --unmount-all'";
-    }
-    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        return {};
-    }
-    return Error() << "'/system/bin/apexd --unmount-all' failed : " << status;
-}
+// static Result<void> UnmountAllApexes() {
+//     const char* args[] = {"/system/bin/apexd", "--unmount-all"};
+//     int status;
+//     if (logwrap_fork_execvp(arraysize(args), args, &status, false, LOG_KLOG, true, nullptr) != 0) {
+//         return ErrnoError() << "Failed to call '/system/bin/apexd --unmount-all'";
+//     }
+//     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+//         return {};
+//     }
+//     return Error() << "'/system/bin/apexd --unmount-all' failed : " << status;
+// }
 
 //* Reboot / shutdown the system.
 // cmd ANDROID_RB_* as defined in android_reboot.h
@@ -739,9 +739,9 @@ static void DoReboot(unsigned int cmd, const std::string& reason, const std::str
 
     LOG(INFO) << "Ready to unmount apexes. So far shutdown sequence took " << t;
     // 6. unmount active apexes, otherwise they might prevent clean unmount of /data.
-    if (auto ret = UnmountAllApexes(); !ret.ok()) {
-        LOG(ERROR) << ret.error();
-    }
+    // if (auto ret = UnmountAllApexes(); !ret.ok()) {
+    //     LOG(ERROR) << ret.error();
+    // }
     UmountStat stat =
             TryUmountAndFsck(cmd, run_fsck, shutdown_timeout - t.duration(), &reboot_semaphore);
     // Follow what linux shutdown is doing: one more sync with little bit delay
@@ -759,16 +759,16 @@ static void DoReboot(unsigned int cmd, const std::string& reason, const std::str
     sem_post(&reboot_semaphore);
 
     // Reboot regardless of umount status. If umount fails, fsck after reboot will fix it.
-    if (IsDataMounted("f2fs")) {
-        uint32_t flag = F2FS_GOING_DOWN_FULLSYNC;
-        unique_fd fd(TEMP_FAILURE_RETRY(open("/data", O_RDONLY)));
-        int ret = ioctl(fd, F2FS_IOC_SHUTDOWN, &flag);
-        if (ret) {
-            PLOG(ERROR) << "Shutdown /data: ";
-        } else {
-            LOG(INFO) << "Shutdown /data";
-        }
-    }
+    // if (IsDataMounted("f2fs")) {
+    //     uint32_t flag = F2FS_GOING_DOWN_FULLSYNC;
+    //     unique_fd fd(TEMP_FAILURE_RETRY(open("/data", O_RDONLY)));
+    //     int ret = ioctl(fd, F2FS_IOC_SHUTDOWN, &flag);
+    //     if (ret) {
+    //         PLOG(ERROR) << "Shutdown /data: ";
+    //     } else {
+    //         LOG(INFO) << "Shutdown /data";
+    //     }
+    // }
     RebootSystem(cmd, reboot_target);
     abort();
 }
@@ -884,10 +884,10 @@ static Result<void> DoUserspaceReboot() {
         sync();
         LOG(INFO) << "sync() took " << sync_timer;
     }
-    if (auto result = UnmountAllApexes(); !result.ok()) {
-        sub_reason = "apex";
-        return result;
-    }
+    // if (auto result = UnmountAllApexes(); !result.ok()) {
+    //     sub_reason = "apex";
+    //     return result;
+    // }
     if (!SwitchToMountNamespaceIfNeeded(NS_BOOTSTRAP).ok()) {
         sub_reason = "ns_switch";
         return Error() << "Failed to switch to bootstrap namespace";
@@ -983,20 +983,20 @@ static void HandleUserspaceReboot() {
  * @param[in,out] boot Bootloader message (BCB) structure
  * @return true if "command" field is already set, and false if it's empty
  */
-static bool CommandIsPresent(bootloader_message* boot) {
-    if (boot->command[0] == '\0')
-        return false;
+// static bool CommandIsPresent(bootloader_message* boot) {
+//     if (boot->command[0] == '\0')
+//         return false;
 
-    for (size_t i = 0; i < arraysize(boot->command); ++i) {
-        if (boot->command[i] == '\0')
-            return true;
-        if (!isprint(boot->command[i]))
-            break;
-    }
+//     for (size_t i = 0; i < arraysize(boot->command); ++i) {
+//         if (boot->command[i] == '\0')
+//             return true;
+//         if (!isprint(boot->command[i]))
+//             break;
+//     }
 
-    memset(boot->command, 0, sizeof(boot->command));
-    return false;
-}
+//     memset(boot->command, 0, sizeof(boot->command));
+//     return false;
+// }
 
 void HandlePowerctlMessage(const std::string& command) {
     unsigned int cmd = 0;
@@ -1036,55 +1036,55 @@ void HandlePowerctlMessage(const std::string& command) {
             }
             // When rebooting to the bootloader notify the bootloader writing
             // also the BCB.
-            if (reboot_target == "bootloader") {
-                std::string err;
-                if (!write_reboot_bootloader(&err)) {
-                    LOG(ERROR) << "reboot-bootloader: Error writing "
-                                  "bootloader_message: "
-                               << err;
-                }
-            } else if (reboot_target == "recovery") {
-                bootloader_message boot = {};
-                if (std::string err; !read_bootloader_message(&boot, &err)) {
-                    LOG(ERROR) << "Failed to read bootloader message: " << err;
-                }
-                // Update the boot command field if it's empty, and preserve
-                // the other arguments in the bootloader message.
-                if (!CommandIsPresent(&boot)) {
-                    strlcpy(boot.command, "boot-recovery", sizeof(boot.command));
-                    if (std::string err; !write_bootloader_message(boot, &err)) {
-                        LOG(ERROR) << "Failed to set bootloader message: " << err;
-                        return;
-                    }
-                }
-            } else if (reboot_target == "quiescent") {
-                bootloader_message boot = {};
-                if (std::string err; !read_bootloader_message(&boot, &err)) {
-                    LOG(ERROR) << "Failed to read bootloader message: " << err;
-                }
-                // Update the boot command field if it's empty, and preserve
-                // the other arguments in the bootloader message.
-                if (!CommandIsPresent(&boot)) {
-                    strlcpy(boot.command, "boot-quiescent", sizeof(boot.command));
-                    if (std::string err; !write_bootloader_message(boot, &err)) {
-                        LOG(ERROR) << "Failed to set bootloader message: " << err;
-                        return;
-                    }
-                }
-            } else if (reboot_target == "sideload" || reboot_target == "sideload-auto-reboot" ||
-                       reboot_target == "fastboot") {
-                std::string arg = reboot_target == "sideload-auto-reboot" ? "sideload_auto_reboot"
-                                                                          : reboot_target;
-                const std::vector<std::string> options = {
-                        "--" + arg,
-                };
-                std::string err;
-                if (!write_bootloader_message(options, &err)) {
-                    LOG(ERROR) << "Failed to set bootloader message: " << err;
-                    return;
-                }
-                reboot_target = "recovery";
-            }
+            // if (reboot_target == "bootloader") {
+            //     std::string err;
+            //     if (!write_reboot_bootloader(&err)) {
+            //         LOG(ERROR) << "reboot-bootloader: Error writing "
+            //                       "bootloader_message: "
+            //                    << err;
+            //     }
+            // } else if (reboot_target == "recovery") {
+            //     bootloader_message boot = {};
+            //     if (std::string err; !read_bootloader_message(&boot, &err)) {
+            //         LOG(ERROR) << "Failed to read bootloader message: " << err;
+            //     }
+            //     // Update the boot command field if it's empty, and preserve
+            //     // the other arguments in the bootloader message.
+            //     if (!CommandIsPresent(&boot)) {
+            //         strlcpy(boot.command, "boot-recovery", sizeof(boot.command));
+            //         if (std::string err; !write_bootloader_message(boot, &err)) {
+            //             LOG(ERROR) << "Failed to set bootloader message: " << err;
+            //             return;
+            //         }
+            //     }
+            // } else if (reboot_target == "quiescent") {
+            //     bootloader_message boot = {};
+            //     if (std::string err; !read_bootloader_message(&boot, &err)) {
+            //         LOG(ERROR) << "Failed to read bootloader message: " << err;
+            //     }
+            //     // Update the boot command field if it's empty, and preserve
+            //     // the other arguments in the bootloader message.
+            //     if (!CommandIsPresent(&boot)) {
+            //         strlcpy(boot.command, "boot-quiescent", sizeof(boot.command));
+            //         if (std::string err; !write_bootloader_message(boot, &err)) {
+            //             LOG(ERROR) << "Failed to set bootloader message: " << err;
+            //             return;
+            //         }
+            //     }
+            // } else if (reboot_target == "sideload" || reboot_target == "sideload-auto-reboot" ||
+            //            reboot_target == "fastboot") {
+            //     std::string arg = reboot_target == "sideload-auto-reboot" ? "sideload_auto_reboot"
+            //                                                               : reboot_target;
+            //     const std::vector<std::string> options = {
+            //             "--" + arg,
+            //     };
+            //     std::string err;
+            //     if (!write_bootloader_message(options, &err)) {
+            //         LOG(ERROR) << "Failed to set bootloader message: " << err;
+            //         return;
+            //     }
+            //     reboot_target = "recovery";
+            // }
 
             // If there are additional parameter, pass them along
             for (size_t i = 2; (cmd_params.size() > i) && cmd_params[i].size(); ++i) {

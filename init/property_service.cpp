@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/un.h>
@@ -59,9 +59,9 @@
 #include <android-base/strings.h>
 #include <property_info_parser/property_info_parser.h>
 #include <property_info_serializer/property_info_serializer.h>
-#include <selinux/android.h>
-#include <selinux/label.h>
-#include <selinux/selinux.h>
+// #include <selinux/android.h>
+// #include <selinux/label.h>
+// #include <selinux/selinux.h>
 
 #include "debug_ramdisk.h"
 #include "epoll.h"
@@ -70,7 +70,7 @@
 #include "property_type.h"
 #include "proto_utils.h"
 #include "second_stage_resources.h"
-#include "selinux.h"
+// #include "selinux.h"
 #include "subcontext.h"
 #include "system/core/init/property_service.pb.h"
 #include "util.h"
@@ -122,18 +122,18 @@ struct PropertyAuditData {
     const char* name;
 };
 
-static int PropertyAuditCallback(void* data, security_class_t /*cls*/, char* buf, size_t len) {
-    auto* d = reinterpret_cast<PropertyAuditData*>(data);
+// static int PropertyAuditCallback(void* data, security_class_t /*cls*/, char* buf, size_t len) {
+//     auto* d = reinterpret_cast<PropertyAuditData*>(data);
 
-    if (!d || !d->name || !d->cr) {
-        LOG(ERROR) << "AuditCallback invoked with null data arguments!";
-        return 0;
-    }
+//     if (!d || !d->name || !d->cr) {
+//         LOG(ERROR) << "AuditCallback invoked with null data arguments!";
+//         return 0;
+//     }
 
-    snprintf(buf, len, "property=%s pid=%d uid=%d gid=%d", d->name, d->cr->pid, d->cr->uid,
-             d->cr->gid);
-    return 0;
-}
+//     snprintf(buf, len, "property=%s pid=%d uid=%d gid=%d", d->name, d->cr->pid, d->cr->uid,
+//              d->cr->gid);
+//     return 0;
+// }
 
 void StartSendingMessages() {
     auto lock = std::lock_guard{accept_messages_lock};
@@ -145,37 +145,37 @@ void StopSendingMessages() {
     accept_messages = false;
 }
 
-bool CanReadProperty(const std::string& source_context, const std::string& name) {
-    const char* target_context = nullptr;
-    property_info_area->GetPropertyInfo(name.c_str(), &target_context, nullptr);
+// bool CanReadProperty(const std::string& source_context, const std::string& name) {
+//     const char* target_context = nullptr;
+//     property_info_area->GetPropertyInfo(name.c_str(), &target_context, nullptr);
 
-    PropertyAuditData audit_data;
+//     PropertyAuditData audit_data;
 
-    audit_data.name = name.c_str();
+//     audit_data.name = name.c_str();
 
-    ucred cr = {.pid = 0, .uid = 0, .gid = 0};
-    audit_data.cr = &cr;
+//     ucred cr = {.pid = 0, .uid = 0, .gid = 0};
+//     audit_data.cr = &cr;
 
-    return selinux_check_access(source_context.c_str(), target_context, "file", "read",
-                                &audit_data) == 0;
-}
+//     return selinux_check_access(source_context.c_str(), target_context, "file", "read",
+//                                 &audit_data) == 0;
+// }
 
-static bool CheckMacPerms(const std::string& name, const char* target_context,
-                          const char* source_context, const ucred& cr) {
-    if (!target_context || !source_context) {
-        return false;
-    }
+// static bool CheckMacPerms(const std::string& name, const char* target_context,
+//                           const char* source_context, const ucred& cr) {
+//     if (!target_context || !source_context) {
+//         return false;
+//     }
 
-    PropertyAuditData audit_data;
+//     PropertyAuditData audit_data;
 
-    audit_data.name = name.c_str();
-    audit_data.cr = &cr;
+//     audit_data.name = name.c_str();
+//     audit_data.cr = &cr;
 
-    bool has_access = (selinux_check_access(source_context, target_context, "property_service",
-                                            "set", &audit_data) == 0);
+//     bool has_access = (selinux_check_access(source_context, target_context, "property_service",
+//                                             "set", &audit_data) == 0);
 
-    return has_access;
-}
+//     return has_access;
+// }
 
 static uint32_t PropertySet(const std::string& name, const std::string& value, std::string* error) {
     size_t valuelen = value.size();
@@ -221,41 +221,41 @@ static uint32_t PropertySet(const std::string& name, const std::string& value, s
     return PROP_SUCCESS;
 }
 
-class AsyncRestorecon {
-  public:
-    void TriggerRestorecon(const std::string& path) {
-        auto guard = std::lock_guard{mutex_};
-        paths_.emplace(path);
+// class AsyncRestorecon {
+//   public:
+//     void TriggerRestorecon(const std::string& path) {
+//         auto guard = std::lock_guard{mutex_};
+//         paths_.emplace(path);
 
-        if (!thread_started_) {
-            thread_started_ = true;
-            std::thread{&AsyncRestorecon::ThreadFunction, this}.detach();
-        }
-    }
+//         if (!thread_started_) {
+//             thread_started_ = true;
+//             std::thread{&AsyncRestorecon::ThreadFunction, this}.detach();
+//         }
+//     }
 
-  private:
-    void ThreadFunction() {
-        auto lock = std::unique_lock{mutex_};
+//   private:
+//     void ThreadFunction() {
+//         auto lock = std::unique_lock{mutex_};
 
-        while (!paths_.empty()) {
-            auto path = paths_.front();
-            paths_.pop();
+//         while (!paths_.empty()) {
+//             auto path = paths_.front();
+//             paths_.pop();
 
-            lock.unlock();
-            if (selinux_android_restorecon(path.c_str(), SELINUX_ANDROID_RESTORECON_RECURSE) != 0) {
-                LOG(ERROR) << "Asynchronous restorecon of '" << path << "' failed'";
-            }
-            android::base::SetProperty(kRestoreconProperty, path);
-            lock.lock();
-        }
+//             lock.unlock();
+//             if (selinux_android_restorecon(path.c_str(), SELINUX_ANDROID_RESTORECON_RECURSE) != 0) {
+//                 LOG(ERROR) << "Asynchronous restorecon of '" << path << "' failed'";
+//             }
+//             android::base::SetProperty(kRestoreconProperty, path);
+//             lock.lock();
+//         }
 
-        thread_started_ = false;
-    }
+//         thread_started_ = false;
+//     }
 
-    std::mutex mutex_;
-    std::queue<std::string> paths_;
-    bool thread_started_ = false;
-};
+//     std::mutex mutex_;
+//     std::queue<std::string> paths_;
+//     bool thread_started_ = false;
+// };
 
 class SocketConnection {
   public:
@@ -304,15 +304,15 @@ class SocketConnection {
         return result == sizeof(value);
     }
 
-    bool GetSourceContext(std::string* source_context) const {
-        char* c_source_context = nullptr;
-        if (getpeercon(socket_, &c_source_context) != 0) {
-            return false;
-        }
-        *source_context = c_source_context;
-        freecon(c_source_context);
-        return true;
-    }
+    // bool GetSourceContext(std::string* source_context) const {
+    //     char* c_source_context = nullptr;
+    //     if (getpeercon(socket_, &c_source_context) != 0) {
+    //         return false;
+    //     }
+    //     *source_context = c_source_context;
+    //     freecon(c_source_context);
+    //     return true;
+    // }
 
     [[nodiscard]] int Release() { return socket_.release(); }
 
@@ -402,7 +402,7 @@ static uint32_t SendControlMessage(const std::string& msg, const std::string& na
     // We must release the fd before sending it to init, otherwise there will be a race with init.
     // If init calls close() before Release(), then fdsan will see the wrong tag and abort().
     int fd = -1;
-    if (socket != nullptr && SelinuxGetVendorAndroidVersion() > __ANDROID_API_Q__) {
+    if (socket != nullptr /*&& SelinuxGetVendorAndroidVersion() > __ANDROID_API_Q__*/) {
         fd = socket->Release();
     }
 
@@ -416,78 +416,78 @@ static uint32_t SendControlMessage(const std::string& msg, const std::string& na
     return PROP_SUCCESS;
 }
 
-bool CheckControlPropertyPerms(const std::string& name, const std::string& value,
-                               const std::string& source_context, const ucred& cr) {
-    // We check the legacy method first but these properties are dontaudit, so we only log an audit
-    // if the newer method fails as well.  We only do this with the legacy ctl. properties.
-    if (name == "ctl.start" || name == "ctl.stop" || name == "ctl.restart") {
-        // The legacy permissions model is that ctl. properties have their name ctl.<action> and
-        // their value is the name of the service to apply that action to.  Permissions for these
-        // actions are based on the service, so we must create a fake name of ctl.<service> to
-        // check permissions.
-        auto control_string_legacy = "ctl." + value;
-        const char* target_context_legacy = nullptr;
-        const char* type_legacy = nullptr;
-        property_info_area->GetPropertyInfo(control_string_legacy.c_str(), &target_context_legacy,
-                                            &type_legacy);
+// bool CheckControlPropertyPerms(const std::string& name, const std::string& value,
+//                                const std::string& source_context, const ucred& cr) {
+//     // We check the legacy method first but these properties are dontaudit, so we only log an audit
+//     // if the newer method fails as well.  We only do this with the legacy ctl. properties.
+//     if (name == "ctl.start" || name == "ctl.stop" || name == "ctl.restart") {
+//         // The legacy permissions model is that ctl. properties have their name ctl.<action> and
+//         // their value is the name of the service to apply that action to.  Permissions for these
+//         // actions are based on the service, so we must create a fake name of ctl.<service> to
+//         // check permissions.
+//         auto control_string_legacy = "ctl." + value;
+//         const char* target_context_legacy = nullptr;
+//         const char* type_legacy = nullptr;
+//         property_info_area->GetPropertyInfo(control_string_legacy.c_str(), &target_context_legacy,
+//                                             &type_legacy);
 
-        if (CheckMacPerms(control_string_legacy, target_context_legacy, source_context.c_str(), cr)) {
-            return true;
-        }
-    }
+//         if (CheckMacPerms(control_string_legacy, target_context_legacy, source_context.c_str(), cr)) {
+//             return true;
+//         }
+//     }
 
-    auto control_string_full = name + "$" + value;
-    const char* target_context_full = nullptr;
-    const char* type_full = nullptr;
-    property_info_area->GetPropertyInfo(control_string_full.c_str(), &target_context_full,
-                                        &type_full);
+//     auto control_string_full = name + "$" + value;
+//     const char* target_context_full = nullptr;
+//     const char* type_full = nullptr;
+//     property_info_area->GetPropertyInfo(control_string_full.c_str(), &target_context_full,
+//                                         &type_full);
 
-    return CheckMacPerms(control_string_full, target_context_full, source_context.c_str(), cr);
-}
+//     return CheckMacPerms(control_string_full, target_context_full, source_context.c_str(), cr);
+// }
 
 // This returns one of the enum of PROP_SUCCESS or PROP_ERROR*.
-uint32_t CheckPermissions(const std::string& name, const std::string& value,
-                          const std::string& source_context, const ucred& cr, std::string* error) {
-    if (!IsLegalPropertyName(name)) {
-        *error = "Illegal property name";
-        return PROP_ERROR_INVALID_NAME;
-    }
+// uint32_t CheckPermissions(const std::string& name, const std::string& value,
+//                           const std::string& source_context, const ucred& cr, std::string* error) {
+//     if (!IsLegalPropertyName(name)) {
+//         *error = "Illegal property name";
+//         return PROP_ERROR_INVALID_NAME;
+//     }
 
-    if (StartsWith(name, "ctl.")) {
-        if (!CheckControlPropertyPerms(name, value, source_context, cr)) {
-            *error = StringPrintf("Invalid permissions to perform '%s' on '%s'", name.c_str() + 4,
-                                  value.c_str());
-            return PROP_ERROR_HANDLE_CONTROL_MESSAGE;
-        }
+//     if (StartsWith(name, "ctl.")) {
+//         if (!CheckControlPropertyPerms(name, value, source_context, cr)) {
+//             *error = StringPrintf("Invalid permissions to perform '%s' on '%s'", name.c_str() + 4,
+//                                   value.c_str());
+//             return PROP_ERROR_HANDLE_CONTROL_MESSAGE;
+//         }
 
-        return PROP_SUCCESS;
-    }
+//         return PROP_SUCCESS;
+//     }
 
-    const char* target_context = nullptr;
-    const char* type = nullptr;
-    property_info_area->GetPropertyInfo(name.c_str(), &target_context, &type);
+//     const char* target_context = nullptr;
+//     const char* type = nullptr;
+//     property_info_area->GetPropertyInfo(name.c_str(), &target_context, &type);
 
-    if (!CheckMacPerms(name, target_context, source_context.c_str(), cr)) {
-        *error = "SELinux permission check failed";
-        return PROP_ERROR_PERMISSION_DENIED;
-    }
+//     if (!CheckMacPerms(name, target_context, source_context.c_str(), cr)) {
+//         *error = "SELinux permission check failed";
+//         return PROP_ERROR_PERMISSION_DENIED;
+//     }
 
-    if (!CheckType(type, value)) {
-        *error = StringPrintf("Property type check failed, value doesn't match expected type '%s'",
-                              (type ?: "(null)"));
-        return PROP_ERROR_INVALID_VALUE;
-    }
+//     if (!CheckType(type, value)) {
+//         *error = StringPrintf("Property type check failed, value doesn't match expected type '%s'",
+//                               (type ?: "(null)"));
+//         return PROP_ERROR_INVALID_VALUE;
+//     }
 
-    return PROP_SUCCESS;
-}
+//     return PROP_SUCCESS;
+// }
 
 // This returns one of the enum of PROP_SUCCESS or PROP_ERROR*.
 uint32_t HandlePropertySet(const std::string& name, const std::string& value,
                            const std::string& source_context, const ucred& cr,
                            SocketConnection* socket, std::string* error) {
-    if (auto ret = CheckPermissions(name, value, source_context, cr, error); ret != PROP_SUCCESS) {
-        return ret;
-    }
+    // if (auto ret = CheckPermissions(name, value, source_context, cr, error); ret != PROP_SUCCESS) {
+    //     return ret;
+    // }
 
     if (StartsWith(name, "ctl.")) {
         return SendControlMessage(name.c_str() + 4, value, cr.pid, socket, error);
@@ -519,11 +519,11 @@ uint32_t HandlePropertySet(const std::string& name, const std::string& value,
     // requesting that init performs a restorecon operation on the path specified by 'value'.
     // We use a thread to do this restorecon operation to prevent holding up init, as it may take
     // a long time to complete.
-    if (name == kRestoreconProperty && cr.pid != 1 && !value.empty()) {
-        static AsyncRestorecon async_restorecon;
-        async_restorecon.TriggerRestorecon(value);
-        return PROP_SUCCESS;
-    }
+    // if (name == kRestoreconProperty && cr.pid != 1 && !value.empty()) {
+    //     static AsyncRestorecon async_restorecon;
+    //     async_restorecon.TriggerRestorecon(value);
+    //     return PROP_SUCCESS;
+    // }
 
     return PropertySet(name, value, error);
 }
@@ -569,10 +569,10 @@ static void handle_property_set_fd() {
         prop_value[PROP_VALUE_MAX-1] = 0;
 
         std::string source_context;
-        if (!socket.GetSourceContext(&source_context)) {
-            PLOG(ERROR) << "Unable to set property '" << prop_name << "': getpeercon() failed";
-            return;
-        }
+        // if (!socket.GetSourceContext(&source_context)) {
+        //     PLOG(ERROR) << "Unable to set property '" << prop_name << "': getpeercon() failed";
+        //     return;
+        // }
 
         const auto& cr = socket.cred();
         std::string error;
@@ -597,11 +597,11 @@ static void handle_property_set_fd() {
         }
 
         std::string source_context;
-        if (!socket.GetSourceContext(&source_context)) {
-            PLOG(ERROR) << "Unable to set property '" << name << "': getpeercon() failed";
-            socket.SendUint32(PROP_ERROR_PERMISSION_DENIED);
-            return;
-        }
+        // if (!socket.GetSourceContext(&source_context)) {
+        //     PLOG(ERROR) << "Unable to set property '" << name << "': getpeercon() failed";
+        //     socket.SendUint32(PROP_ERROR_PERMISSION_DENIED);
+        //     return;
+        // }
 
         const auto& cr = socket.cred();
         std::string error;
@@ -645,21 +645,21 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
     char *key, *value, *eol, *sol, *tmp, *fn;
     size_t flen = 0;
 
-    static constexpr const char* const kVendorPathPrefixes[4] = {
-            "/vendor",
-            "/odm",
-            "/vendor_dlkm",
-            "/odm_dlkm",
-    };
+    // static constexpr const char* const kVendorPathPrefixes[4] = {
+    //         "/vendor",
+    //         "/odm",
+    //         "/vendor_dlkm",
+    //         "/odm_dlkm",
+    // };
 
-    const char* context = kInitContext;
-    if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_P__) {
-        for (const auto& vendor_path_prefix : kVendorPathPrefixes) {
-            if (StartsWith(filename, vendor_path_prefix)) {
-                context = kVendorContext;
-            }
-        }
-    }
+    // const char* context = kInitContext;
+    // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_P__) {
+    //     for (const auto& vendor_path_prefix : kVendorPathPrefixes) {
+    //         if (StartsWith(filename, vendor_path_prefix)) {
+    //             context = kVendorContext;
+    //         }
+    //     }
+    // }
 
     if (filter) {
         flen = strlen(filter);
@@ -724,9 +724,9 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
                 continue;
             }
 
-            ucred cr = {.pid = 1, .uid = 0, .gid = 0};
+            // ucred cr = {.pid = 1, .uid = 0, .gid = 0};
             std::string error;
-            if (CheckPermissions(key, value, context, cr, &error) == PROP_SUCCESS) {
+            // if (CheckPermissions(key, value, context, cr, &error) == PROP_SUCCESS) {
                 auto it = properties->find(key);
                 if (it == properties->end()) {
                     (*properties)[key] = value;
@@ -735,10 +735,10 @@ static void LoadProperties(char* data, const char* filter, const char* filename,
                                  << "' with new value '" << value << "'";
                     it->second = value;
                 }
-            } else {
-                LOG(ERROR) << "Do not have permissions to set '" << key << "' to '" << value
-                           << "' in property file '" << filename << "': " << error;
-            }
+            // } else {
+            //     LOG(ERROR) << "Do not have permissions to set '" << key << "' to '" << value
+            //                << "' in property file '" << filename << "': " << error;
+            // }
         }
     }
 }
@@ -1171,7 +1171,7 @@ bool LoadPropertyInfoFromFile(const std::string& filename,
     }
 
     auto errors = std::vector<std::string>{};
-    bool require_prefix_or_exact = SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__;
+    bool require_prefix_or_exact = true;//SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__;
     ParsePropertyInfoFile(file_contents, require_prefix_or_exact, property_infos, &errors);
     // Individual parsing errors are reported but do not cause a failed boot, which is what
     // returning false would do here.
@@ -1233,7 +1233,7 @@ void CreateSerializedPropertyInfo() {
     if (!WriteStringToFile(serialized_contexts, kPropertyInfosPath, 0444, 0, 0, false)) {
         PLOG(ERROR) << "Unable to write serialized property infos to file";
     }
-    selinux_android_restorecon(kPropertyInfosPath, 0);
+    // selinux_android_restorecon(kPropertyInfosPath, 0);
 }
 
 static void ExportKernelBootProps() {
@@ -1303,9 +1303,9 @@ static void ProcessBootconfig() {
 }
 
 void PropertyInit() {
-    selinux_callback cb;
-    cb.func_audit = PropertyAuditCallback;
-    selinux_set_callback(SELINUX_CB_AUDIT, cb);
+    // selinux_callback cb;
+    // cb.func_audit = PropertyAuditCallback;
+    // selinux_set_callback(SELINUX_CB_AUDIT, cb);
 
     mkdir("/dev/__properties__", S_IRWXU | S_IXGRP | S_IXOTH);
     CreateSerializedPropertyInfo();

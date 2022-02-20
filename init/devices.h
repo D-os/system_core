@@ -26,7 +26,7 @@
 #include <vector>
 
 #include <android-base/file.h>
-#include <selinux/label.h>
+// #include <selinux/label.h>
 
 #include "uevent.h"
 #include "uevent_handler.h"

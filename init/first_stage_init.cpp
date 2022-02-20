@@ -30,6 +30,7 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <android-base/chrono_utils.h>
@@ -43,7 +44,7 @@
 #include "first_stage_mount.h"
 #include "reboot_utils.h"
 #include "second_stage_resources.h"
-#include "snapuserd_transition.h"
+// #include "snapuserd_transition.h"
 #include "switch_root.h"
 #include "util.h"
 
@@ -92,12 +93,12 @@ void FreeRamdisk(DIR* dir, dev_t dev) {
                     }
                 }
             }
-        } else if (de->d_type == DT_REG) {
-            // Do not free snapuserd if we will need the ramdisk copy during the
-            // selinux transition.
-            if (de->d_name == "snapuserd"s && IsFirstStageSnapuserdRunning()) {
-                continue;
-            }
+        // } else if (de->d_type == DT_REG) {
+        //     // Do not free snapuserd if we will need the ramdisk copy during the
+        //     // selinux transition.
+        //     if (de->d_name == "snapuserd"s && IsFirstStageSnapuserdRunning()) {
+        //         continue;
+        //     }
         }
         unlinkat(dfd, de->d_name, is_dir ? AT_REMOVEDIR : 0);
     }
@@ -244,9 +245,11 @@ int FirstStageMain(int argc, char** argv) {
     CHECKCALL(mkdir("/dev/socket", 0755));
     CHECKCALL(mkdir("/dev/dm-user", 0755));
     CHECKCALL(mount("devpts", "/dev/pts", "devpts", 0, NULL));
-#define MAKE_STR(x) __STRING(x)
+#define MAKE_STR_(x) #x
+#define MAKE_STR(x) MAKE_STR_(x)
     CHECKCALL(mount("proc", "/proc", "proc", 0, "hidepid=2,gid=" MAKE_STR(AID_READPROC)));
 #undef MAKE_STR
+#undef MAKE_STR_
     // Don't expose the raw commandline to unprivileged processes.
     CHECKCALL(chmod("/proc/cmdline", 0440));
     std::string cmdline;
@@ -417,7 +420,7 @@ int FirstStageMain(int argc, char** argv) {
         FreeRamdisk(old_root_dir.get(), old_root_info.st_dev);
     }
 
-    SetInitAvbVersionInRecovery();
+    // SetInitAvbVersionInRecovery();
 
     setenv(kEnvFirstStageStartedAt, std::to_string(start_time.time_since_epoch().count()).c_str(),
            1);

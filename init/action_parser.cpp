@@ -23,7 +23,7 @@
 
 #ifdef INIT_FULL_SOURCES
 #include "property_service.h"
-#include "selinux.h"
+// #include "selinux.h"
 #else
 #include "host_init_stubs.h"
 #endif
@@ -55,7 +55,7 @@ bool IsActionableProperty(Subcontext* subcontext, const std::string& prop_name) 
         }
     }
 
-    return CanReadProperty(subcontext->context(), prop_name);
+    return true;//CanReadProperty(subcontext->context(), prop_name);
 }
 
 Result<void> ParsePropertyTrigger(const std::string& trigger, Subcontext* subcontext,
@@ -81,13 +81,13 @@ Result<void> ParsePropertyTrigger(const std::string& trigger, Subcontext* subcon
 }
 
 Result<void> ValidateEventTrigger(const std::string& event_trigger) {
-    if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
+    // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
         for (const char& c : event_trigger) {
             if (c != '_' && c != '-' && !std::isalnum(c)) {
                 return Error() << "Illegal character '" << c << "' in '" << event_trigger << "'";
             }
         }
-    }
+    // }
     return {};
 }
 

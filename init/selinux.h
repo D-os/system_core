@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#error do not use
 
 namespace android {
 namespace init {

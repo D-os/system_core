@@ -16,6 +16,8 @@
 
 #include "service.h"
 
+#include <array>
+
 #include <fcntl.h>
 #include <inttypes.h>
 #include <linux/securebits.h>
@@ -34,19 +36,19 @@
 #include <android-base/strings.h>
 #include <cutils/sockets.h>
 #include <processgroup/processgroup.h>
-#include <selinux/selinux.h>
+// #include <selinux/selinux.h>
 
-#include "lmkd_service.h"
+// #include "lmkd_service.h"
 #include "service_list.h"
 #include "util.h"
 
 #ifdef INIT_FULL_SOURCES
-#include <ApexProperties.sysprop.h>
+// #include <ApexProperties.sysprop.h>
 #include <android/api-level.h>
 
 #include "mount_namespace.h"
 #include "reboot_utils.h"
-#include "selinux.h"
+// #include "selinux.h"
 #else
 #include "host_init_stubs.h"
 #endif
@@ -64,43 +66,43 @@ using android::base::WriteStringToFile;
 namespace android {
 namespace init {
 
-static Result<std::string> ComputeContextFromExecutable(const std::string& service_path) {
-    std::string computed_context;
+// static Result<std::string> ComputeContextFromExecutable(const std::string& service_path) {
+//     std::string computed_context;
 
-    char* raw_con = nullptr;
-    char* raw_filecon = nullptr;
+//     char* raw_con = nullptr;
+//     char* raw_filecon = nullptr;
 
-    if (getcon(&raw_con) == -1) {
-        return Error() << "Could not get security context";
-    }
-    std::unique_ptr<char, decltype(&freecon)> mycon(raw_con, freecon);
+//     if (getcon(&raw_con) == -1) {
+//         return Error() << "Could not get security context";
+//     }
+//     std::unique_ptr<char, decltype(&freecon)> mycon(raw_con, freecon);
 
-    if (getfilecon(service_path.c_str(), &raw_filecon) == -1) {
-        return Error() << "Could not get file context";
-    }
-    std::unique_ptr<char, decltype(&freecon)> filecon(raw_filecon, freecon);
+//     if (getfilecon(service_path.c_str(), &raw_filecon) == -1) {
+//         return Error() << "Could not get file context";
+//     }
+//     std::unique_ptr<char, decltype(&freecon)> filecon(raw_filecon, freecon);
 
-    char* new_con = nullptr;
-    int rc = security_compute_create(mycon.get(), filecon.get(),
-                                     string_to_security_class("process"), &new_con);
-    if (rc == 0) {
-        computed_context = new_con;
-        free(new_con);
-    }
-    if (rc == 0 && computed_context == mycon.get()) {
-        return Error() << "File " << service_path << "(labeled \"" << filecon.get()
-                       << "\") has incorrect label or no domain transition from " << mycon.get()
-                       << " to another SELinux domain defined. Have you configured your "
-                          "service correctly? https://source.android.com/security/selinux/"
-                          "device-policy#label_new_services_and_address_denials. Note: this "
-                          "error shows up even in permissive mode in order to make auditing "
-                          "denials possible.";
-    }
-    if (rc < 0) {
-        return Error() << "Could not get process context";
-    }
-    return computed_context;
-}
+//     char* new_con = nullptr;
+//     int rc = security_compute_create(mycon.get(), filecon.get(),
+//                                      string_to_security_class("process"), &new_con);
+//     if (rc == 0) {
+//         computed_context = new_con;
+//         free(new_con);
+//     }
+//     if (rc == 0 && computed_context == mycon.get()) {
+//         return Error() << "File " << service_path << "(labeled \"" << filecon.get()
+//                        << "\") has incorrect label or no domain transition from " << mycon.get()
+//                        << " to another SELinux domain defined. Have you configured your "
+//                           "service correctly? https://source.android.com/security/selinux/"
+//                           "device-policy#label_new_services_and_address_denials. Note: this "
+//                           "error shows up even in permissive mode in order to make auditing "
+//                           "denials possible.";
+//     }
+//     if (rc < 0) {
+//         return Error() << "Could not get process context";
+//     }
+//     return computed_context;
+// }
 
 static bool ExpandArgsAndExecv(const std::vector<std::string>& args, bool sigstop) {
     std::vector<std::string> expanded_args;
@@ -153,7 +155,7 @@ Service::Service(const std::string& name, unsigned flags, uid_t uid, gid_t gid,
       subcontext_(subcontext_for_restart_commands),
       onrestart_(false, subcontext_for_restart_commands, "<Service '" + name + "' onrestart>", 0,
                  "onrestart", {}),
-      oom_score_adjust_(DEFAULT_OOM_SCORE_ADJUST),
+    //   oom_score_adjust_(DEFAULT_OOM_SCORE_ADJUST),
       start_order_(0),
       args_(args),
       from_apex_(from_apex) {}
@@ -212,9 +214,9 @@ void Service::KillProcessGroup(int signal, bool report_oneshot) {
         if (r == 0) process_cgroup_empty_ = true;
     }
 
-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
-        LmkdUnregister(name_, pid_);
-    }
+    // if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+    //     LmkdUnregister(name_, pid_);
+    // }
 }
 
 void Service::SetProcessAttributesAndCaps() {
@@ -236,11 +238,11 @@ void Service::SetProcessAttributesAndCaps() {
         LOG(FATAL) << "cannot set attribute for " << name_ << ": " << result.error();
     }
 
-    if (!seclabel_.empty()) {
-        if (setexeccon(seclabel_.c_str()) < 0) {
-            PLOG(FATAL) << "cannot setexeccon('" << seclabel_ << "') for " << name_;
-        }
-    }
+    // if (!seclabel_.empty()) {
+    //     if (setexeccon(seclabel_.c_str()) < 0) {
+    //         PLOG(FATAL) << "cannot setexeccon('" << seclabel_ << "') for " << name_;
+    //     }
+    // }
 
     if (capabilities_) {
         if (!SetCapsForExec(*capabilities_)) {
@@ -258,14 +260,14 @@ void Service::Reap(const siginfo_t& siginfo) {
     if (!(flags_ & SVC_ONESHOT) || (flags_ & SVC_RESTART)) {
         KillProcessGroup(SIGKILL, false);
     } else {
-        // Legacy behavior from ~2007 until Android R: this else branch did not exist and we did not
-        // kill the process group in this case.
-        if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
+        // // Legacy behavior from ~2007 until Android R: this else branch did not exist and we did not
+        // // kill the process group in this case.
+        // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
             // The new behavior in Android R is to kill these process groups in all cases.  The
             // 'true' parameter instructions KillProcessGroup() to report a warning message where it
             // detects a difference in behavior has occurred.
             KillProcessGroup(SIGKILL, true);
-        }
+        // }
     }
 
     // Remove any socket resources we may have created.
@@ -310,7 +312,7 @@ void Service::Reap(const siginfo_t& siginfo) {
         return;
     }
 
-#if INIT_FULL_SOURCES
+#if false && INIT_FULL_SOURCES
     static bool is_apex_updatable = android::sysprop::ApexProperties::updatable().value_or(false);
 #else
     static bool is_apex_updatable = false;
@@ -571,15 +573,15 @@ Result<void> Service::Start() {
     }
 
     std::string scon;
-    if (!seclabel_.empty()) {
-        scon = seclabel_;
-    } else {
-        auto result = ComputeContextFromExecutable(args_[0]);
-        if (!result.ok()) {
-            return result.error();
-        }
-        scon = *result;
-    }
+    // if (!seclabel_.empty()) {
+    //     scon = seclabel_;
+    // } else {
+    //     auto result = ComputeContextFromExecutable(args_[0]);
+    //     if (!result.ok()) {
+    //         return result.error();
+    //     }
+    //     scon = *result;
+    // }
 
     // APEXd is always started in the "current" namespace because it is the process to set up
     // the current namespace.
@@ -642,13 +644,13 @@ Result<void> Service::Start() {
         return ErrnoError() << "Failed to fork";
     }
 
-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
-        std::string oom_str = std::to_string(oom_score_adjust_);
-        std::string oom_file = StringPrintf("/proc/%d/oom_score_adj", pid);
-        if (!WriteStringToFile(oom_str, oom_file)) {
-            PLOG(ERROR) << "couldn't write oom_score_adj";
-        }
-    }
+    // if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+    //     std::string oom_str = std::to_string(oom_score_adjust_);
+    //     std::string oom_file = StringPrintf("/proc/%d/oom_score_adj", pid);
+    //     if (!WriteStringToFile(oom_str, oom_file)) {
+    //         PLOG(ERROR) << "couldn't write oom_score_adj";
+    //     }
+    // }
 
     time_started_ = boot_clock::now();
     pid_ = pid;
@@ -671,9 +673,9 @@ Result<void> Service::Start() {
         ConfigureMemcg();
     }
 
-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
-        LmkdRegister(name_, proc_attr_.uid, pid_, oom_score_adjust_);
-    }
+    // if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+    //     LmkdRegister(name_, proc_attr_.uid, pid_, oom_score_adjust_);
+    // }
 
     if (char byte = 1; write((*pipefd)[1], &byte, 1) < 0) {
         return ErrnoError() << "sending notification failed";

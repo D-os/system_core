@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include "interface_utils.h"
+// #include "interface_utils.h"
 #include "parser.h"
 #include "service.h"
 #include "service_list.h"
@@ -31,11 +31,11 @@ class ServiceParser : public SectionParser {
   public:
     ServiceParser(
             ServiceList* service_list, Subcontext* subcontext,
-            const std::optional<InterfaceInheritanceHierarchyMap>& interface_inheritance_hierarchy,
+            // const std::optional<InterfaceInheritanceHierarchyMap>& interface_inheritance_hierarchy,
             bool from_apex = false)
         : service_list_(service_list),
           subcontext_(subcontext),
-          interface_inheritance_hierarchy_(interface_inheritance_hierarchy),
+          // interface_inheritance_hierarchy_(interface_inheritance_hierarchy),
           service_(nullptr),
           from_apex_(from_apex) {}
     Result<void> ParseSection(std::vector<std::string>&& args, const std::string& filename,
@@ -89,7 +89,7 @@ class ServiceParser : public SectionParser {
 
     ServiceList* service_list_;
     Subcontext* subcontext_;
-    std::optional<InterfaceInheritanceHierarchyMap> interface_inheritance_hierarchy_;
+    // std::optional<InterfaceInheritanceHierarchyMap> interface_inheritance_hierarchy_;
     std::unique_ptr<Service> service_;
     std::string filename_;
     bool from_apex_ = false;

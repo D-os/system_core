@@ -16,7 +16,9 @@
 
 #include <sys/capability.h>
 #include <sys/reboot.h>
+#include <linux/reboot.h>
 #include <sys/syscall.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include <optional>

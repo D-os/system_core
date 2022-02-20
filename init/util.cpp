@@ -39,15 +39,15 @@
 #include <android-base/strings.h>
 #include <android-base/unique_fd.h>
 #include <cutils/sockets.h>
-#include <selinux/android.h>
+// #include <selinux/android.h>
 
 #ifdef INIT_FULL_SOURCES
 #include <android/api-level.h>
 #include <sys/system_properties.h>
 
 #include "reboot_utils.h"
-#include "selabel.h"
-#include "selinux.h"
+// #include "selabel.h"
+// #include "selinux.h"
 #else
 #include "host_init_stubs.h"
 #endif
@@ -90,18 +90,18 @@ Result<uid_t> DecodeUid(const std::string& name) {
  */
 Result<int> CreateSocket(const std::string& name, int type, bool passcred, mode_t perm, uid_t uid,
                          gid_t gid, const std::string& socketcon) {
-    if (!socketcon.empty()) {
-        if (setsockcreatecon(socketcon.c_str()) == -1) {
-            return ErrnoError() << "setsockcreatecon(\"" << socketcon << "\") failed";
-        }
-    }
+    // if (!socketcon.empty()) {
+    //     if (setsockcreatecon(socketcon.c_str()) == -1) {
+    //         return ErrnoError() << "setsockcreatecon(\"" << socketcon << "\") failed";
+    //     }
+    // }
 
     android::base::unique_fd fd(socket(PF_UNIX, type, 0));
     if (fd < 0) {
         return ErrnoError() << "Failed to open socket '" << name << "'";
     }
 
-    if (!socketcon.empty()) setsockcreatecon(nullptr);
+    // if (!socketcon.empty()) setsockcreatecon(nullptr);
 
     struct sockaddr_un addr;
     memset(&addr, 0 , sizeof(addr));
@@ -112,10 +112,10 @@ Result<int> CreateSocket(const std::string& name, int type, bool passcred, mode_
         return ErrnoError() << "Failed to unlink old socket '" << name << "'";
     }
 
-    std::string secontext;
-    if (SelabelLookupFileContext(addr.sun_path, S_IFSOCK, &secontext) && !secontext.empty()) {
-        setfscreatecon(secontext.c_str());
-    }
+    // std::string secontext;
+    // if (SelabelLookupFileContext(addr.sun_path, S_IFSOCK, &secontext) && !secontext.empty()) {
+    //     setfscreatecon(secontext.c_str());
+    // }
 
     if (passcred) {
         int on = 1;
@@ -127,9 +127,9 @@ Result<int> CreateSocket(const std::string& name, int type, bool passcred, mode_
     int ret = bind(fd, (struct sockaddr *) &addr, sizeof (addr));
     int savederrno = errno;
 
-    if (!secontext.empty()) {
-        setfscreatecon(nullptr);
-    }
+    // if (!secontext.empty()) {
+    //     setfscreatecon(nullptr);
+    // }
 
     auto guard = android::base::make_scope_guard([&addr] { unlink(addr.sun_path); });
 
@@ -179,18 +179,18 @@ Result<std::string> ReadFile(const std::string& path) {
 }
 
 static int OpenFile(const std::string& path, int flags, mode_t mode) {
-    std::string secontext;
-    if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
-        setfscreatecon(secontext.c_str());
-    }
+    // std::string secontext;
+    // if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
+    //     setfscreatecon(secontext.c_str());
+    // }
 
     int rc = open(path.c_str(), flags, mode);
 
-    if (!secontext.empty()) {
-        int save_errno = errno;
-        setfscreatecon(nullptr);
-        errno = save_errno;
-    }
+    // if (!secontext.empty()) {
+    //     int save_errno = errno;
+    //     setfscreatecon(nullptr);
+    //     errno = save_errno;
+    // }
 
     return rc;
 }
@@ -265,17 +265,17 @@ void ImportBootconfig(const std::function<void(const std::string&, const std::st
 
 bool make_dir(const std::string& path, mode_t mode) {
     std::string secontext;
-    if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
-        setfscreatecon(secontext.c_str());
-    }
+    // if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
+    //     setfscreatecon(secontext.c_str());
+    // }
 
     int rc = mkdir(path.c_str(), mode);
 
-    if (!secontext.empty()) {
-        int save_errno = errno;
-        setfscreatecon(nullptr);
-        errno = save_errno;
-    }
+    // if (!secontext.empty()) {
+    //     int save_errno = errno;
+    //     setfscreatecon(nullptr);
+    //     errno = save_errno;
+    // }
 
     return rc == 0;
 }
@@ -341,13 +341,13 @@ Result<std::string> ExpandProps(const std::string& src) {
             }
         } else {
             prop_name = c;
-            if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
+            // if (SelinuxGetVendorAndroidVersion() >= __ANDROID_API_R__) {
                 return Error() << "using deprecated syntax for specifying property '" << c
                                << "', use ${name} instead";
-            } else {
-                LOG(ERROR) << "using deprecated syntax for specifying property '" << c
-                           << "', use ${name} instead";
-            }
+            // } else {
+            //     LOG(ERROR) << "using deprecated syntax for specifying property '" << c
+            //                << "', use ${name} instead";
+            // }
             c += prop_name.size();
         }
 
@@ -480,11 +480,11 @@ std::string CleanDirPath(const std::string& path) {
 
 Result<MkdirOptions> ParseMkdir(const std::vector<std::string>& args) {
     std::string path = CleanDirPath(args[1]);
-    const bool is_toplevel_data_dir =
-            StartsWith(path, kDataDirPrefix) &&
-            path.find_first_of('/', kDataDirPrefix.size()) == std::string::npos;
-    FscryptAction fscrypt_action =
-            is_toplevel_data_dir ? FscryptAction::kRequire : FscryptAction::kNone;
+    // const bool is_toplevel_data_dir =
+    //         StartsWith(path, kDataDirPrefix) &&
+    //         path.find_first_of('/', kDataDirPrefix.size()) == std::string::npos;
+    // FscryptAction fscrypt_action =
+    //         is_toplevel_data_dir ? FscryptAction::kRequire : FscryptAction::kNone;
     mode_t mode = 0755;
     Result<uid_t> uid = -1;
     Result<gid_t> gid = -1;
@@ -522,17 +522,17 @@ Result<MkdirOptions> ParseMkdir(const std::vector<std::string>& args) {
                     if (set_option_encryption) {
                         return Error() << "Duplicated option: '" << optname << "'";
                     }
-                    if (optval == "Require") {
-                        fscrypt_action = FscryptAction::kRequire;
-                    } else if (optval == "None") {
-                        fscrypt_action = FscryptAction::kNone;
-                    } else if (optval == "Attempt") {
-                        fscrypt_action = FscryptAction::kAttempt;
-                    } else if (optval == "DeleteIfNecessary") {
-                        fscrypt_action = FscryptAction::kDeleteIfNecessary;
-                    } else {
+                    // if (optval == "Require") {
+                    //     fscrypt_action = FscryptAction::kRequire;
+                    // } else if (optval == "None") {
+                    //     fscrypt_action = FscryptAction::kNone;
+                    // } else if (optval == "Attempt") {
+                    //     fscrypt_action = FscryptAction::kAttempt;
+                    // } else if (optval == "DeleteIfNecessary") {
+                    //     fscrypt_action = FscryptAction::kDeleteIfNecessary;
+                    // } else {
                         return Error() << "Unknown encryption option: '" << optval << "'";
-                    }
+                    // }
                     set_option_encryption = true;
                 } else if (optname == "key") {
                     if (set_option_key) {
@@ -549,32 +549,32 @@ Result<MkdirOptions> ParseMkdir(const std::vector<std::string>& args) {
                 }
         }
     }
-    if (set_option_key && fscrypt_action == FscryptAction::kNone) {
-        return Error() << "Key option set but encryption action is none";
-    }
-    if (is_toplevel_data_dir) {
-        if (!set_option_encryption) {
-            LOG(WARNING) << "Top-level directory needs encryption action, eg mkdir " << path
-                         << " <mode> <uid> <gid> encryption=Require";
-        }
-        if (fscrypt_action == FscryptAction::kNone) {
-            LOG(INFO) << "Not setting encryption policy on: " << path;
-        }
-    }
+    // if (set_option_key && fscrypt_action == FscryptAction::kNone) {
+    //     return Error() << "Key option set but encryption action is none";
+    // }
+    // if (is_toplevel_data_dir) {
+    //     if (!set_option_encryption) {
+    //         LOG(WARNING) << "Top-level directory needs encryption action, eg mkdir " << path
+    //                      << " <mode> <uid> <gid> encryption=Require";
+    //     }
+    //     if (fscrypt_action == FscryptAction::kNone) {
+    //         LOG(INFO) << "Not setting encryption policy on: " << path;
+    //     }
+    // }
 
-    return MkdirOptions{path, mode, *uid, *gid, fscrypt_action, ref_option};
+    return MkdirOptions{path, mode, *uid, *gid, /*fscrypt_action,*/ ref_option};
 }
 
 Result<MountAllOptions> ParseMountAll(const std::vector<std::string>& args) {
     bool compat_mode = false;
     bool import_rc = false;
-    if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
-        if (args.size() <= 1) {
-            return Error() << "mount_all requires at least 1 argument";
-        }
-        compat_mode = true;
-        import_rc = true;
-    }
+    // if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
+    //     if (args.size() <= 1) {
+    //         return Error() << "mount_all requires at least 1 argument";
+    //     }
+    //     compat_mode = true;
+    //     import_rc = true;
+    // }
 
     std::size_t first_option_arg = args.size();
     enum mount_mode mode = MOUNT_MODE_DEFAULT;
@@ -607,51 +607,51 @@ Result<MountAllOptions> ParseMountAll(const std::vector<std::string>& args) {
     return MountAllOptions{rc_paths, fstab_path, mode, import_rc};
 }
 
-Result<std::pair<int, std::vector<std::string>>> ParseRestorecon(
-        const std::vector<std::string>& args) {
-    struct flag_type {
-        const char* name;
-        int value;
-    };
-    static const flag_type flags[] = {
-            {"--recursive", SELINUX_ANDROID_RESTORECON_RECURSE},
-            {"--skip-ce", SELINUX_ANDROID_RESTORECON_SKIPCE},
-            {"--cross-filesystems", SELINUX_ANDROID_RESTORECON_CROSS_FILESYSTEMS},
-            {0, 0}};
+// Result<std::pair<int, std::vector<std::string>>> ParseRestorecon(
+//         const std::vector<std::string>& args) {
+//     struct flag_type {
+//         const char* name;
+//         int value;
+//     };
+//     static const flag_type flags[] = {
+//             {"--recursive", SELINUX_ANDROID_RESTORECON_RECURSE},
+//             {"--skip-ce", SELINUX_ANDROID_RESTORECON_SKIPCE},
+//             {"--cross-filesystems", SELINUX_ANDROID_RESTORECON_CROSS_FILESYSTEMS},
+//             {0, 0}};
 
-    int flag = 0;
-    std::vector<std::string> paths;
+//     int flag = 0;
+//     std::vector<std::string> paths;
 
-    bool in_flags = true;
-    for (size_t i = 1; i < args.size(); ++i) {
-        if (android::base::StartsWith(args[i], "--")) {
-            if (!in_flags) {
-                return Error() << "flags must precede paths";
-            }
-            bool found = false;
-            for (size_t j = 0; flags[j].name; ++j) {
-                if (args[i] == flags[j].name) {
-                    flag |= flags[j].value;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                return Error() << "bad flag " << args[i];
-            }
-        } else {
-            in_flags = false;
-            paths.emplace_back(args[i]);
-        }
-    }
-    return std::pair(flag, paths);
-}
+//     bool in_flags = true;
+//     for (size_t i = 1; i < args.size(); ++i) {
+//         if (android::base::StartsWith(args[i], "--")) {
+//             if (!in_flags) {
+//                 return Error() << "flags must precede paths";
+//             }
+//             bool found = false;
+//             for (size_t j = 0; flags[j].name; ++j) {
+//                 if (args[i] == flags[j].name) {
+//                     flag |= flags[j].value;
+//                     found = true;
+//                     break;
+//                 }
+//             }
+//             if (!found) {
+//                 return Error() << "bad flag " << args[i];
+//             }
+//         } else {
+//             in_flags = false;
+//             paths.emplace_back(args[i]);
+//         }
+//     }
+//     return std::pair(flag, paths);
+// }
 
 Result<std::string> ParseSwaponAll(const std::vector<std::string>& args) {
     if (args.size() <= 1) {
-        if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
-            return Error() << "swapon_all requires at least 1 argument";
-        }
+        // if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
+        //     return Error() << "swapon_all requires at least 1 argument";
+        // }
         return {};
     }
     return args[1];
@@ -659,9 +659,9 @@ Result<std::string> ParseSwaponAll(const std::vector<std::string>& args) {
 
 Result<std::string> ParseUmountAll(const std::vector<std::string>& args) {
     if (args.size() <= 1) {
-        if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
-            return Error() << "umount_all requires at least 1 argument";
-        }
+        // if (SelinuxGetVendorAndroidVersion() <= __ANDROID_API_Q__) {
+        //     return Error() << "umount_all requires at least 1 argument";
+        // }
         return {};
     }
     return args[1];

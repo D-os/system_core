@@ -26,7 +26,7 @@
 
 #include <android-base/chrono_utils.h>
 
-#include "fscrypt_init_extensions.h"
+// #include "fscrypt_init_extensions.h"
 #include "result.h"
 
 using android::base::boot_clock;
@@ -76,7 +76,7 @@ struct MkdirOptions {
     mode_t mode;
     uid_t uid;
     gid_t gid;
-    FscryptAction fscrypt_action;
+    // FscryptAction fscrypt_action;
     std::string ref_option;
 };
 
@@ -91,8 +91,8 @@ struct MountAllOptions {
 
 Result<MountAllOptions> ParseMountAll(const std::vector<std::string>& args);
 
-Result<std::pair<int, std::vector<std::string>>> ParseRestorecon(
-        const std::vector<std::string>& args);
+// Result<std::pair<int, std::vector<std::string>>> ParseRestorecon(
+//         const std::vector<std::string>& args);
 
 Result<std::string> ParseSwaponAll(const std::vector<std::string>& args);
 

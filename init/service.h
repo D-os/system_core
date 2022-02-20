@@ -122,7 +122,7 @@ class Service {
     int ioprio_pri() const { return proc_attr_.ioprio_pri; }
     const std::set<std::string>& interfaces() const { return interfaces_; }
     int priority() const { return proc_attr_.priority; }
-    int oom_score_adjust() const { return oom_score_adjust_; }
+    // int oom_score_adjust() const { return oom_score_adjust_; }
     bool is_override() const { return override_; }
     bool process_cgroup_empty() const { return process_cgroup_empty_; }
     unsigned long start_order() const { return start_order_; }
@@ -193,7 +193,7 @@ class Service {
     // keycodes for triggering this service via /dev/input/input*
     std::vector<int> keycodes_;
 
-    int oom_score_adjust_;
+    // int oom_score_adjust_;
 
     int swappiness_ = -1;
     int soft_limit_in_bytes_ = -1;

@@ -17,10 +17,11 @@
 #include "builtins.h"
 #include "first_stage_init.h"
 #include "init.h"
-#include "selinux.h"
+// #include "selinux.h"
 #include "subcontext.h"
 #include "ueventd.h"
 
+#include <libgen.h>
 #include <android-base/logging.h>
 
 #if __has_feature(address_sanitizer)
@@ -70,9 +71,9 @@ int main(int argc, char** argv) {
             return SubcontextMain(argc, argv, &function_map);
         }
 
-        if (!strcmp(argv[1], "selinux_setup")) {
-            return SetupSelinux(argv);
-        }
+        // if (!strcmp(argv[1], "selinux_setup")) {
+        //     return SetupSelinux(argv);
+        // }
 
         if (!strcmp(argv[1], "second_stage")) {
             return SecondStageMain(argc, argv);

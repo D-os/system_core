@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#error do not use
 
 #include <string>
 #include <vector>

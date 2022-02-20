@@ -35,14 +35,14 @@
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <fstab/fstab.h>
-#include <selinux/android.h>
-#include <selinux/selinux.h>
+// #include <selinux/android.h>
+// #include <selinux/selinux.h>
 
 #include "devices.h"
 #include "firmware_handler.h"
 #include "modalias_handler.h"
-#include "selabel.h"
-#include "selinux.h"
+// #include "selabel.h"
+// #include "selinux.h"
 #include "uevent_handler.h"
 #include "uevent_listener.h"
 #include "ueventd_parser.h"
@@ -159,25 +159,25 @@ void ColdBoot::UeventHandlerMain(unsigned int process_num, unsigned int total_pr
 }
 
 void ColdBoot::RestoreConHandler(unsigned int process_num, unsigned int total_processes) {
-    android::base::Timer t_process;
+//     android::base::Timer t_process;
 
-    for (unsigned int i = process_num; i < restorecon_queue_.size(); i += total_processes) {
-        android::base::Timer t;
-        auto& dir = restorecon_queue_[i];
+//     for (unsigned int i = process_num; i < restorecon_queue_.size(); i += total_processes) {
+//         android::base::Timer t;
+//         auto& dir = restorecon_queue_[i];
 
-        selinux_android_restorecon(dir.c_str(), SELINUX_ANDROID_RESTORECON_RECURSE);
+//         selinux_android_restorecon(dir.c_str(), SELINUX_ANDROID_RESTORECON_RECURSE);
 
-        //Mark a dir restorecon operation for 50ms,
-        //Maybe you can add this dir to the ueventd.rc script to parallel processing
-        if (t.duration() > 50ms) {
-            LOG(INFO) << "took " << t.duration().count() <<"ms restorecon '"
-                        << dir.c_str() << "' on process '" << process_num  <<"'";
-        }
-    }
+//         //Mark a dir restorecon operation for 50ms,
+//         //Maybe you can add this dir to the ueventd.rc script to parallel processing
+//         if (t.duration() > 50ms) {
+//             LOG(INFO) << "took " << t.duration().count() <<"ms restorecon '"
+//                         << dir.c_str() << "' on process '" << process_num  <<"'";
+//         }
+//     }
 
-    //Calculate process restorecon time
-    LOG(VERBOSE) << "took " << t_process.duration().count() << "ms on process '"
-                << process_num  << "'";
+//     //Calculate process restorecon time
+//     LOG(VERBOSE) << "took " << t_process.duration().count() << "ms on process '"
+//                 << process_num  << "'";
 }
 
 void ColdBoot::GenerateRestoreCon(const std::string& directory) {
@@ -271,24 +271,24 @@ void ColdBoot::Run() {
 
     RegenerateUevents();
 
-    if (enable_parallel_restorecon_) {
-        if (parallel_restorecon_queue_.empty()) {
-            parallel_restorecon_queue_.emplace_back("/sys");
-            // takes long time for /sys/devices, parallelize it
-            parallel_restorecon_queue_.emplace_back("/sys/devices");
-            LOG(INFO) << "Parallel processing directory is not set, set the default";
-        }
-        for (const auto& dir : parallel_restorecon_queue_) {
-            selinux_android_restorecon(dir.c_str(), 0);
-            GenerateRestoreCon(dir);
-        }
-    }
+    // if (enable_parallel_restorecon_) {
+    //     if (parallel_restorecon_queue_.empty()) {
+    //         parallel_restorecon_queue_.emplace_back("/sys");
+    //         // takes long time for /sys/devices, parallelize it
+    //         parallel_restorecon_queue_.emplace_back("/sys/devices");
+    //         LOG(INFO) << "Parallel processing directory is not set, set the default";
+    //     }
+    //     for (const auto& dir : parallel_restorecon_queue_) {
+    //         selinux_android_restorecon(dir.c_str(), 0);
+    //         GenerateRestoreCon(dir);
+    //     }
+    // }
 
     ForkSubProcesses();
 
-    if (!enable_parallel_restorecon_) {
-        selinux_android_restorecon("/sys", SELINUX_ANDROID_RESTORECON_RECURSE);
-    }
+    // if (!enable_parallel_restorecon_) {
+    //     selinux_android_restorecon("/sys", SELINUX_ANDROID_RESTORECON_RECURSE);
+    // }
 
     WaitForSubProcesses();
 
@@ -342,8 +342,8 @@ int ueventd_main(int argc, char** argv) {
 
     LOG(INFO) << "ueventd started!";
 
-    SelinuxSetupKernelLogging();
-    SelabelInitialize();
+    // SelinuxSetupKernelLogging();
+    // SelabelInitialize();
 
     std::vector<std::unique_ptr<UeventHandler>> uevent_handlers;
 

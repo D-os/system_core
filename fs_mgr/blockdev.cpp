@@ -20,7 +20,7 @@
 #include <android-base/strings.h>
 
 #include <dirent.h>
-#include <libdm/dm.h>
+// #include <libdm/dm.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <sys/types.h>
@@ -33,30 +33,30 @@ using android::base::Result;
 using android::base::StartsWith;
 using android::base::StringPrintf;
 using android::base::unique_fd;
-using android::dm::DeviceMapper;
+// using android::dm::DeviceMapper;
 
 // Return the parent device of a partition. Converts e.g. "sda26" into "sda".
-static std::string PartitionParent(const std::string& blockdev) {
-    if (blockdev.find('/') != std::string::npos) {
-        LOG(ERROR) << __func__ << ": invalid argument " << blockdev;
-        return blockdev;
-    }
-    auto dir = std::unique_ptr<DIR, decltype(&closedir)>{opendir("/sys/class/block"), closedir};
-    if (!dir) {
-        return blockdev;
-    }
-    for (struct dirent* ent = readdir(dir.get()); ent; ent = readdir(dir.get())) {
-        if (ent->d_name[0] == '.') {
-            continue;
-        }
-        std::string path = StringPrintf("/sys/class/block/%s/%s", ent->d_name, blockdev.c_str());
-        struct stat statbuf;
-        if (stat(path.c_str(), &statbuf) >= 0) {
-            return ent->d_name;
-        }
-    }
-    return blockdev;
-}
+// static std::string PartitionParent(const std::string& blockdev) {
+//     if (blockdev.find('/') != std::string::npos) {
+//         LOG(ERROR) << __func__ << ": invalid argument " << blockdev;
+//         return blockdev;
+//     }
+//     auto dir = std::unique_ptr<DIR, decltype(&closedir)>{opendir("/sys/class/block"), closedir};
+//     if (!dir) {
+//         return blockdev;
+//     }
+//     for (struct dirent* ent = readdir(dir.get()); ent; ent = readdir(dir.get())) {
+//         if (ent->d_name[0] == '.') {
+//             continue;
+//         }
+//         std::string path = StringPrintf("/sys/class/block/%s/%s", ent->d_name, blockdev.c_str());
+//         struct stat statbuf;
+//         if (stat(path.c_str(), &statbuf) >= 0) {
+//             return ent->d_name;
+//         }
+//     }
+//     return blockdev;
+// }
 
 // Convert a major:minor pair into a block device name.
 static std::string BlockdevName(dev_t dev) {
@@ -96,20 +96,20 @@ static Result<uint32_t> BlockDeviceQueueDepth(const std::string& file_path) {
         return Errorf("Failed to convert {}:{} (path {})", major(statbuf.st_dev),
                       minor(statbuf.st_dev), file_path.c_str());
     }
-    auto& dm = DeviceMapper::Instance();
-    for (;;) {
-        std::optional<std::string> child = dm.GetParentBlockDeviceByPath(blockdev);
-        if (!child) {
-            break;
-        }
-        LOG(DEBUG) << __func__ << ": " << blockdev << " -> " << *child;
-        blockdev = *child;
-    }
-    std::optional<std::string> maybe_blockdev = android::dm::ExtractBlockDeviceName(blockdev);
-    if (!maybe_blockdev) {
-        return Errorf("Failed to remove /dev/block/ prefix from {}", blockdev);
-    }
-    blockdev = PartitionParent(*maybe_blockdev);
+    // auto& dm = DeviceMapper::Instance();
+    // for (;;) {
+    //     std::optional<std::string> child = dm.GetParentBlockDeviceByPath(blockdev);
+    //     if (!child) {
+    //         break;
+    //     }
+    //     LOG(DEBUG) << __func__ << ": " << blockdev << " -> " << *child;
+    //     blockdev = *child;
+    // }
+    // std::optional<std::string> maybe_blockdev = android::dm::ExtractBlockDeviceName(blockdev);
+    // if (!maybe_blockdev) {
+    //     return Errorf("Failed to remove /dev/block/ prefix from {}", blockdev);
+    // }
+    // blockdev = PartitionParent(*maybe_blockdev);
     LOG(DEBUG) << __func__ << ": "
                << "Partition parent: " << blockdev;
     const std::string nr_tags_path =

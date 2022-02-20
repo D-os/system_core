@@ -61,10 +61,10 @@
 #include <ext4_utils/wipe.h>
 // #include <fs_avb/fs_avb.h>
 #include <fs_mgr/file_wait.h>
-#include <fs_mgr_overlayfs.h>
+// #include <fs_mgr_overlayfs.h>
 // #include <fscrypt/fscrypt.h>
-#include <libdm/dm.h>
-#include <libdm/loop_control.h>
+// #include <libdm/dm.h>
+// #include <libdm/loop_control.h>
 #include <liblp/metadata_format.h>
 #include <linux/fs.h>
 #include <linux/loop.h>
@@ -101,10 +101,10 @@ using android::base::StartsWith;
 using android::base::StringPrintf;
 using android::base::Timer;
 using android::base::unique_fd;
-using android::dm::DeviceMapper;
-using android::dm::DmDeviceState;
-using android::dm::DmTargetLinear;
-using android::dm::LoopControl;
+// using android::dm::DeviceMapper;
+// using android::dm::DmDeviceState;
+// using android::dm::DmTargetLinear;
+// using android::dm::LoopControl;
 
 // Realistically, this file should be part of the android::fs_mgr namespace;
 using namespace android::fs_mgr;
@@ -670,7 +670,7 @@ static void SetReadAheadSize(const std::string& entry_block_device, off64_t size
         return;
     }
 
-    DeviceMapper& dm = DeviceMapper::Instance();
+    // DeviceMapper& dm = DeviceMapper::Instance();
     while (true) {
         std::string block_name = block_device;
         if (android::base::StartsWith(block_device, kDevBlockPrefix)) {
@@ -689,11 +689,11 @@ static void SetReadAheadSize(const std::string& entry_block_device, off64_t size
         android::base::WriteStringToFile(size, sys_ra.c_str());
         LINFO << "Set readahead_kb: " << size << " on " << sys_ra;
 
-        auto parent = dm.GetParentBlockDeviceByPath(block_device);
-        if (!parent) {
-            return;
-        }
-        block_device = *parent;
+        // auto parent = dm.GetParentBlockDeviceByPath(block_device);
+        // if (!parent) {
+        //     return;
+        // }
+        // block_device = *parent;
     }
 }
 
@@ -1062,23 +1062,23 @@ static bool call_vdc(const std::vector<std::string>& args, int* ret) {
     return true;
 }
 
-bool fs_mgr_update_logical_partition(FstabEntry* entry) {
-    // Logical partitions are specified with a named partition rather than a
-    // block device, so if the block device is a path, then it has already
-    // been updated.
-    if (entry->blk_device[0] == '/') {
-        return true;
-    }
+// bool fs_mgr_update_logical_partition(FstabEntry* entry) {
+//     // Logical partitions are specified with a named partition rather than a
+//     // block device, so if the block device is a path, then it has already
+//     // been updated.
+//     if (entry->blk_device[0] == '/') {
+//         return true;
+//     }
 
-    DeviceMapper& dm = DeviceMapper::Instance();
-    std::string device_name;
-    if (!dm.GetDmDevicePathByName(entry->blk_device, &device_name)) {
-        return false;
-    }
+//     DeviceMapper& dm = DeviceMapper::Instance();
+//     std::string device_name;
+//     if (!dm.GetDmDevicePathByName(entry->blk_device, &device_name)) {
+//         return false;
+//     }
 
-    entry->blk_device = device_name;
-    return true;
-}
+//     entry->blk_device = device_name;
+//     return true;
+// }
 
 static bool SupportsCheckpoint(FstabEntry* entry) {
     return entry->fs_mgr_flags.checkpoint_blk || entry->fs_mgr_flags.checkpoint_fs;
@@ -1134,10 +1134,10 @@ class CheckpointManager {
         entry->blk_device = device_map_[bow_device];
         device_map_.erase(bow_device);
 
-        DeviceMapper& dm = DeviceMapper::Instance();
-        if (!dm.DeleteDevice("bow")) {
-            PERROR << "Failed to remove bow device";
-        }
+        // DeviceMapper& dm = DeviceMapper::Instance();
+        // if (!dm.DeleteDevice("bow")) {
+        //     PERROR << "Failed to remove bow device";
+        // }
 
         return true;
     }
@@ -1166,9 +1166,9 @@ class CheckpointManager {
                     return false;
                 }
 
-                android::dm::DmTable table;
-                auto bowTarget =
-                        std::make_unique<android::dm::DmTargetBow>(0, size, entry->blk_device);
+                // android::dm::DmTable table;
+                // auto bowTarget =
+                //         std::make_unique<android::dm::DmTargetBow>(0, size, entry->blk_device);
 
                 // dm-bow uses the first block as a log record, and relocates the real first block
                 // elsewhere. For metadata encrypted devices, dm-bow sits below dm-default-key, and
@@ -1187,25 +1187,25 @@ class CheckpointManager {
                 //     bowTarget->SetBlockSize(4096);
                 // }
 
-                if (!table.AddTarget(std::move(bowTarget))) {
-                    LERROR << "Failed to add bow target";
-                    return false;
-                }
+                // if (!table.AddTarget(std::move(bowTarget))) {
+                //     LERROR << "Failed to add bow target";
+                //     return false;
+                // }
 
-                DeviceMapper& dm = DeviceMapper::Instance();
-                if (!dm.CreateDevice("bow", table)) {
-                    PERROR << "Failed to create bow device";
-                    return false;
-                }
+                // DeviceMapper& dm = DeviceMapper::Instance();
+                // if (!dm.CreateDevice("bow", table)) {
+                //     PERROR << "Failed to create bow device";
+                //     return false;
+                // }
 
-                std::string name;
-                if (!dm.GetDmDevicePathByName("bow", &name)) {
-                    PERROR << "Failed to get bow device name";
-                    return false;
-                }
+                // std::string name;
+                // if (!dm.GetDmDevicePathByName("bow", &name)) {
+                //     PERROR << "Failed to get bow device name";
+                //     return false;
+                // }
 
-                device_map_[name] = entry->blk_device;
-                entry->blk_device = name;
+                // device_map_[name] = entry->blk_device;
+                // entry->blk_device = name;
             }
         }
         return true;
@@ -1261,36 +1261,36 @@ std::string fs_mgr_find_bow_device(const std::string& block_device) {
     }
 }
 
-static constexpr const char* kUserdataWrapperName = "userdata-wrapper";
+// static constexpr const char* kUserdataWrapperName = "userdata-wrapper";
 
-static void WrapUserdata(FstabEntry* entry, dev_t dev, const std::string& block_device) {
-    DeviceMapper& dm = DeviceMapper::Instance();
-    if (dm.GetState(kUserdataWrapperName) != DmDeviceState::INVALID) {
-        // This will report failure for us. If we do fail to get the path,
-        // we leave the device unwrapped.
-        dm.GetDmDevicePathByName(kUserdataWrapperName, &entry->blk_device);
-        return;
-    }
+// static void WrapUserdata(FstabEntry* entry, dev_t dev, const std::string& block_device) {
+//     DeviceMapper& dm = DeviceMapper::Instance();
+//     if (dm.GetState(kUserdataWrapperName) != DmDeviceState::INVALID) {
+//         // This will report failure for us. If we do fail to get the path,
+//         // we leave the device unwrapped.
+//         dm.GetDmDevicePathByName(kUserdataWrapperName, &entry->blk_device);
+//         return;
+//     }
 
-    unique_fd fd(open(block_device.c_str(), O_RDONLY | O_CLOEXEC));
-    if (fd < 0) {
-        PLOG(ERROR) << "open failed: " << entry->blk_device;
-        return;
-    }
+//     unique_fd fd(open(block_device.c_str(), O_RDONLY | O_CLOEXEC));
+//     if (fd < 0) {
+//         PLOG(ERROR) << "open failed: " << entry->blk_device;
+//         return;
+//     }
 
-    auto dev_str = android::base::StringPrintf("%u:%u", major(dev), minor(dev));
-    uint64_t sectors = get_block_device_size(fd) / 512;
+//     auto dev_str = android::base::StringPrintf("%u:%u", major(dev), minor(dev));
+//     uint64_t sectors = get_block_device_size(fd) / 512;
 
-    android::dm::DmTable table;
-    table.Emplace<DmTargetLinear>(0, sectors, dev_str, 0);
+//     android::dm::DmTable table;
+//     table.Emplace<DmTargetLinear>(0, sectors, dev_str, 0);
 
-    std::string dm_path;
-    if (!dm.CreateDevice(kUserdataWrapperName, table, &dm_path, 20s)) {
-        LOG(ERROR) << "Failed to create userdata wrapper device";
-        return;
-    }
-    entry->blk_device = dm_path;
-}
+//     std::string dm_path;
+//     if (!dm.CreateDevice(kUserdataWrapperName, table, &dm_path, 20s)) {
+//         LOG(ERROR) << "Failed to create userdata wrapper device";
+//         return;
+//     }
+//     entry->blk_device = dm_path;
+// }
 
 // When using Virtual A/B, partitions can be backed by /data and mapped with
 // device-mapper in first-stage init. This can happen when merging an OTA or
@@ -1302,41 +1302,41 @@ static void WrapUserdata(FstabEntry* entry, dev_t dev, const std::string& block_
 // if the underlying block device already has dependencies. Note that we make
 // an exception for metadata-encrypted devices, since dm-default-key is already
 // a wrapper.
-static void WrapUserdataIfNeeded(FstabEntry* entry, const std::string& actual_block_device = {}) {
-    const auto& block_device =
-            actual_block_device.empty() ? entry->blk_device : actual_block_device;
-    if (entry->mount_point != "/data" || !entry->metadata_key_dir.empty() ||
-        android::base::StartsWith(block_device, "/dev/block/dm-")) {
-        return;
-    }
+// static void WrapUserdataIfNeeded(FstabEntry* entry, const std::string& actual_block_device = {}) {
+//     const auto& block_device =
+//             actual_block_device.empty() ? entry->blk_device : actual_block_device;
+//     if (entry->mount_point != "/data" || !entry->metadata_key_dir.empty() ||
+//         android::base::StartsWith(block_device, "/dev/block/dm-")) {
+//         return;
+//     }
 
-    struct stat st;
-    if (stat(block_device.c_str(), &st) < 0) {
-        PLOG(ERROR) << "stat failed: " << block_device;
-        return;
-    }
+//     struct stat st;
+//     if (stat(block_device.c_str(), &st) < 0) {
+//         PLOG(ERROR) << "stat failed: " << block_device;
+//         return;
+//     }
 
-    std::string path = android::base::StringPrintf("/sys/dev/block/%u:%u/holders",
-                                                   major(st.st_rdev), minor(st.st_rdev));
-    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
-    if (!dir) {
-        PLOG(ERROR) << "opendir failed: " << path;
-        return;
-    }
+//     std::string path = android::base::StringPrintf("/sys/dev/block/%u:%u/holders",
+//                                                    major(st.st_rdev), minor(st.st_rdev));
+//     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
+//     if (!dir) {
+//         PLOG(ERROR) << "opendir failed: " << path;
+//         return;
+//     }
 
-    struct dirent* d;
-    bool has_holders = false;
-    while ((d = readdir(dir.get())) != nullptr) {
-        if (strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0) {
-            has_holders = true;
-            break;
-        }
-    }
+//     struct dirent* d;
+//     bool has_holders = false;
+//     while ((d = readdir(dir.get())) != nullptr) {
+//         if (strcmp(d->d_name, ".") != 0 && strcmp(d->d_name, "..") != 0) {
+//             has_holders = true;
+//             break;
+//         }
+//     }
 
-    if (has_holders) {
-        WrapUserdata(entry, st.st_rdev, block_device);
-    }
-}
+//     if (has_holders) {
+//         WrapUserdata(entry, st.st_rdev, block_device);
+//     }
+// }
 
 static bool IsMountPointMounted(const std::string& mount_point) {
     // Check if this is already mounted.
@@ -1412,14 +1412,14 @@ MountAllResult fs_mgr_mount_all(Fstab* fstab, int mount_mode) {
             }
         }
 
-        if (current_entry.fs_mgr_flags.logical) {
-            if (!fs_mgr_update_logical_partition(&current_entry)) {
-                LERROR << "Could not set up logical partition, skipping!";
-                continue;
-            }
-        }
+        // if (current_entry.fs_mgr_flags.logical) {
+        //     if (!fs_mgr_update_logical_partition(&current_entry)) {
+        //         LERROR << "Could not set up logical partition, skipping!";
+        //         continue;
+        //     }
+        // }
 
-        WrapUserdataIfNeeded(&current_entry);
+        // WrapUserdataIfNeeded(&current_entry);
 
         if (!checkpoint_manager.Update(&current_entry)) {
             continue;
@@ -1578,9 +1578,9 @@ MountAllResult fs_mgr_mount_all(Fstab* fstab, int mount_mode) {
 
     set_type_property(encryptable);
 
-#if ALLOW_ADBD_DISABLE_VERITY == 1  // "userdebug" build
-    fs_mgr_overlayfs_mount_all(fstab);
-#endif
+// #if ALLOW_ADBD_DISABLE_VERITY == 1  // "userdebug" build
+//     fs_mgr_overlayfs_mount_all(fstab);
+// #endif
 
     if (error_count) {
         return {FS_MGR_MNTALL_FAIL, userdata_mounted};
@@ -1603,13 +1603,13 @@ int fs_mgr_umount_all(android::fs_mgr::Fstab* fstab) {
             continue;
         }
 
-        if (current_entry.fs_mgr_flags.logical) {
-            if (!fs_mgr_update_logical_partition(&current_entry)) {
-                LERROR << "Could not get logical partition blk_device, skipping!";
-                ret |= FsMgrUmountStatus::ERROR_DEVICE_MAPPER;
-                continue;
-            }
-        }
+        // if (current_entry.fs_mgr_flags.logical) {
+        //     if (!fs_mgr_update_logical_partition(&current_entry)) {
+        //         LERROR << "Could not get logical partition blk_device, skipping!";
+        //         ret |= FsMgrUmountStatus::ERROR_DEVICE_MAPPER;
+        //         continue;
+        //     }
+        // }
 
         // if (current_entry.fs_mgr_flags.avb || !current_entry.avb_keys.empty()) {
         //     if (!AvbHandle::TearDownAvbHashtree(&current_entry, true /* wait */)) {
@@ -1622,189 +1622,189 @@ int fs_mgr_umount_all(android::fs_mgr::Fstab* fstab) {
     return ret;
 }
 
-static std::chrono::milliseconds GetMillisProperty(const std::string& name,
-                                                   std::chrono::milliseconds default_value) {
-    auto value = GetUintProperty(name, static_cast<uint64_t>(default_value.count()));
-    return std::chrono::milliseconds(std::move(value));
-}
+// static std::chrono::milliseconds GetMillisProperty(const std::string& name,
+//                                                    std::chrono::milliseconds default_value) {
+//     auto value = GetUintProperty(name, static_cast<uint64_t>(default_value.count()));
+//     return std::chrono::milliseconds(std::move(value));
+// }
 
-static bool fs_mgr_unmount_all_data_mounts(const std::string& data_block_device) {
-    LINFO << __FUNCTION__ << "(): about to umount everything on top of " << data_block_device;
-    Timer t;
-    auto timeout = GetMillisProperty("init.userspace_reboot.userdata_remount.timeoutmillis", 5s);
-    while (true) {
-        bool umount_done = true;
-        Fstab proc_mounts;
-        if (!ReadFstabFromFile("/proc/mounts", &proc_mounts)) {
-            LERROR << __FUNCTION__ << "(): Can't read /proc/mounts";
-            return false;
-        }
-        // Now proceed with other bind mounts on top of /data.
-        for (const auto& entry : proc_mounts) {
-            std::string block_device;
-            if (StartsWith(entry.blk_device, "/dev/block") &&
-                !Realpath(entry.blk_device, &block_device)) {
-                PWARNING << __FUNCTION__ << "(): failed to realpath " << entry.blk_device;
-                block_device = entry.blk_device;
-            }
-            if (data_block_device == block_device) {
-                if (umount2(entry.mount_point.c_str(), 0) != 0) {
-                    PERROR << __FUNCTION__ << "(): Failed to umount " << entry.mount_point;
-                    umount_done = false;
-                }
-            }
-        }
-        if (umount_done) {
-            LINFO << __FUNCTION__ << "(): Unmounting /data took " << t;
-            return true;
-        }
-        if (t.duration() > timeout) {
-            LERROR << __FUNCTION__ << "(): Timed out unmounting all mounts on "
-                   << data_block_device;
-            Fstab remaining_mounts;
-            if (!ReadFstabFromFile("/proc/mounts", &remaining_mounts)) {
-                LERROR << __FUNCTION__ << "(): Can't read /proc/mounts";
-            } else {
-                LERROR << __FUNCTION__ << "(): Following mounts remaining";
-                for (const auto& e : remaining_mounts) {
-                    LERROR << __FUNCTION__ << "(): mount point: " << e.mount_point
-                           << " block device: " << e.blk_device;
-                }
-            }
-            return false;
-        }
-        std::this_thread::sleep_for(50ms);
-    }
-}
+// static bool fs_mgr_unmount_all_data_mounts(const std::string& data_block_device) {
+//     LINFO << __FUNCTION__ << "(): about to umount everything on top of " << data_block_device;
+//     Timer t;
+//     auto timeout = GetMillisProperty("init.userspace_reboot.userdata_remount.timeoutmillis", 5s);
+//     while (true) {
+//         bool umount_done = true;
+//         Fstab proc_mounts;
+//         if (!ReadFstabFromFile("/proc/mounts", &proc_mounts)) {
+//             LERROR << __FUNCTION__ << "(): Can't read /proc/mounts";
+//             return false;
+//         }
+//         // Now proceed with other bind mounts on top of /data.
+//         for (const auto& entry : proc_mounts) {
+//             std::string block_device;
+//             if (StartsWith(entry.blk_device, "/dev/block") &&
+//                 !Realpath(entry.blk_device, &block_device)) {
+//                 PWARNING << __FUNCTION__ << "(): failed to realpath " << entry.blk_device;
+//                 block_device = entry.blk_device;
+//             }
+//             if (data_block_device == block_device) {
+//                 if (umount2(entry.mount_point.c_str(), 0) != 0) {
+//                     PERROR << __FUNCTION__ << "(): Failed to umount " << entry.mount_point;
+//                     umount_done = false;
+//                 }
+//             }
+//         }
+//         if (umount_done) {
+//             LINFO << __FUNCTION__ << "(): Unmounting /data took " << t;
+//             return true;
+//         }
+//         if (t.duration() > timeout) {
+//             LERROR << __FUNCTION__ << "(): Timed out unmounting all mounts on "
+//                    << data_block_device;
+//             Fstab remaining_mounts;
+//             if (!ReadFstabFromFile("/proc/mounts", &remaining_mounts)) {
+//                 LERROR << __FUNCTION__ << "(): Can't read /proc/mounts";
+//             } else {
+//                 LERROR << __FUNCTION__ << "(): Following mounts remaining";
+//                 for (const auto& e : remaining_mounts) {
+//                     LERROR << __FUNCTION__ << "(): mount point: " << e.mount_point
+//                            << " block device: " << e.blk_device;
+//                 }
+//             }
+//             return false;
+//         }
+//         std::this_thread::sleep_for(50ms);
+//     }
+// }
 
-static bool UnwindDmDeviceStack(const std::string& block_device,
-                                std::vector<std::string>* dm_stack) {
-    if (!StartsWith(block_device, "/dev/block/")) {
-        LWARNING << block_device << " is not a block device";
-        return false;
-    }
-    std::string current = block_device;
-    DeviceMapper& dm = DeviceMapper::Instance();
-    while (true) {
-        dm_stack->push_back(current);
-        if (!dm.IsDmBlockDevice(current)) {
-            break;
-        }
-        auto parent = dm.GetParentBlockDeviceByPath(current);
-        if (!parent) {
-            return false;
-        }
-        current = *parent;
-    }
-    return true;
-}
+// static bool UnwindDmDeviceStack(const std::string& block_device,
+//                                 std::vector<std::string>* dm_stack) {
+//     if (!StartsWith(block_device, "/dev/block/")) {
+//         LWARNING << block_device << " is not a block device";
+//         return false;
+//     }
+//     std::string current = block_device;
+//     DeviceMapper& dm = DeviceMapper::Instance();
+//     while (true) {
+//         dm_stack->push_back(current);
+//         if (!dm.IsDmBlockDevice(current)) {
+//             break;
+//         }
+//         auto parent = dm.GetParentBlockDeviceByPath(current);
+//         if (!parent) {
+//             return false;
+//         }
+//         current = *parent;
+//     }
+//     return true;
+// }
 
-FstabEntry* fs_mgr_get_mounted_entry_for_userdata(Fstab* fstab,
-                                                  const std::string& data_block_device) {
-    std::vector<std::string> dm_stack;
-    if (!UnwindDmDeviceStack(data_block_device, &dm_stack)) {
-        LERROR << "Failed to unwind dm-device stack for " << data_block_device;
-        return nullptr;
-    }
-    for (auto& entry : *fstab) {
-        if (entry.mount_point != "/data") {
-            continue;
-        }
-        std::string block_device;
-        if (entry.fs_mgr_flags.logical) {
-            if (!fs_mgr_update_logical_partition(&entry)) {
-                LERROR << "Failed to update logic partition " << entry.blk_device;
-                continue;
-            }
-            block_device = entry.blk_device;
-        } else if (!Realpath(entry.blk_device, &block_device)) {
-            PWARNING << "Failed to realpath " << entry.blk_device;
-            block_device = entry.blk_device;
-        }
-        if (std::find(dm_stack.begin(), dm_stack.end(), block_device) != dm_stack.end()) {
-            return &entry;
-        }
-    }
-    LERROR << "Didn't find entry that was used to mount /data onto " << data_block_device;
-    return nullptr;
-}
+// FstabEntry* fs_mgr_get_mounted_entry_for_userdata(Fstab* fstab,
+//                                                   const std::string& data_block_device) {
+//     std::vector<std::string> dm_stack;
+//     if (!UnwindDmDeviceStack(data_block_device, &dm_stack)) {
+//         LERROR << "Failed to unwind dm-device stack for " << data_block_device;
+//         return nullptr;
+//     }
+//     for (auto& entry : *fstab) {
+//         if (entry.mount_point != "/data") {
+//             continue;
+//         }
+//         std::string block_device;
+//         // if (entry.fs_mgr_flags.logical) {
+//         //     if (!fs_mgr_update_logical_partition(&entry)) {
+//         //         LERROR << "Failed to update logic partition " << entry.blk_device;
+//         //         continue;
+//         //     }
+//         //     block_device = entry.blk_device;
+//         /*} else*/ if (!Realpath(entry.blk_device, &block_device)) {
+//             PWARNING << "Failed to realpath " << entry.blk_device;
+//             block_device = entry.blk_device;
+//         }
+//         if (std::find(dm_stack.begin(), dm_stack.end(), block_device) != dm_stack.end()) {
+//             return &entry;
+//         }
+//     }
+//     LERROR << "Didn't find entry that was used to mount /data onto " << data_block_device;
+//     return nullptr;
+// }
 
 // TODO(b/143970043): return different error codes based on which step failed.
-int fs_mgr_remount_userdata_into_checkpointing(Fstab* fstab) {
-    Fstab proc_mounts;
-    if (!ReadFstabFromFile("/proc/mounts", &proc_mounts)) {
-        LERROR << "Can't read /proc/mounts";
-        return -1;
-    }
-    auto mounted_entry = GetEntryForMountPoint(&proc_mounts, "/data");
-    if (mounted_entry == nullptr) {
-        LERROR << "/data is not mounted";
-        return -1;
-    }
-    std::string block_device;
-    if (!Realpath(mounted_entry->blk_device, &block_device)) {
-        PERROR << "Failed to realpath " << mounted_entry->blk_device;
-        return -1;
-    }
-    auto fstab_entry = fs_mgr_get_mounted_entry_for_userdata(fstab, block_device);
-    if (fstab_entry == nullptr) {
-        LERROR << "Can't find /data in fstab";
-        return -1;
-    }
-    bool force_umount = GetBoolProperty("sys.init.userdata_remount.force_umount", false);
-    if (force_umount) {
-        LINFO << "Will force an umount of userdata even if it's not required";
-    }
-    if (!force_umount && !SupportsCheckpoint(fstab_entry)) {
-        LINFO << "Userdata doesn't support checkpointing. Nothing to do";
-        return 0;
-    }
-    CheckpointManager checkpoint_manager;
-    if (!force_umount && !checkpoint_manager.NeedsCheckpoint()) {
-        LINFO << "Checkpointing not needed. Don't remount";
-        return 0;
-    }
-    if (!force_umount && fstab_entry->fs_mgr_flags.checkpoint_fs) {
-        // Userdata is f2fs, simply remount it.
-        if (!checkpoint_manager.Update(fstab_entry)) {
-            LERROR << "Failed to remount userdata in checkpointing mode";
-            return -1;
-        }
-        if (mount(block_device.c_str(), fstab_entry->mount_point.c_str(), "none",
-                  MS_REMOUNT | fstab_entry->flags, fstab_entry->fs_options.c_str()) != 0) {
-            PERROR << "Failed to remount userdata in checkpointing mode";
-            return -1;
-        }
-    } else {
-        LINFO << "Unmounting /data before remounting into checkpointing mode";
-        if (!fs_mgr_unmount_all_data_mounts(block_device)) {
-            LERROR << "Failed to umount /data";
-            return -1;
-        }
-        DeviceMapper& dm = DeviceMapper::Instance();
-        while (dm.IsDmBlockDevice(block_device)) {
-            auto next_device = dm.GetParentBlockDeviceByPath(block_device);
-            auto name = dm.GetDmDeviceNameByPath(block_device);
-            if (!name) {
-                LERROR << "Failed to get dm-name for " << block_device;
-                return -1;
-            }
-            LINFO << "Deleting " << block_device << " named " << *name;
-            if (!dm.DeleteDevice(*name, 3s)) {
-                return -1;
-            }
-            if (!next_device) {
-                LERROR << "Failed to find parent device for " << block_device;
-            }
-            block_device = *next_device;
-        }
-        LINFO << "Remounting /data";
-        // TODO(b/143970043): remove this hack after fs_mgr_mount_all is refactored.
-        auto result = fs_mgr_mount_all(fstab, MOUNT_MODE_ONLY_USERDATA);
-        return result.code == FS_MGR_MNTALL_FAIL ? -1 : 0;
-    }
-    return 0;
-}
+// int fs_mgr_remount_userdata_into_checkpointing(Fstab* fstab) {
+//     Fstab proc_mounts;
+//     if (!ReadFstabFromFile("/proc/mounts", &proc_mounts)) {
+//         LERROR << "Can't read /proc/mounts";
+//         return -1;
+//     }
+//     auto mounted_entry = GetEntryForMountPoint(&proc_mounts, "/data");
+//     if (mounted_entry == nullptr) {
+//         LERROR << "/data is not mounted";
+//         return -1;
+//     }
+//     std::string block_device;
+//     if (!Realpath(mounted_entry->blk_device, &block_device)) {
+//         PERROR << "Failed to realpath " << mounted_entry->blk_device;
+//         return -1;
+//     }
+//     auto fstab_entry = fs_mgr_get_mounted_entry_for_userdata(fstab, block_device);
+//     if (fstab_entry == nullptr) {
+//         LERROR << "Can't find /data in fstab";
+//         return -1;
+//     }
+//     bool force_umount = GetBoolProperty("sys.init.userdata_remount.force_umount", false);
+//     if (force_umount) {
+//         LINFO << "Will force an umount of userdata even if it's not required";
+//     }
+//     if (!force_umount && !SupportsCheckpoint(fstab_entry)) {
+//         LINFO << "Userdata doesn't support checkpointing. Nothing to do";
+//         return 0;
+//     }
+//     CheckpointManager checkpoint_manager;
+//     if (!force_umount && !checkpoint_manager.NeedsCheckpoint()) {
+//         LINFO << "Checkpointing not needed. Don't remount";
+//         return 0;
+//     }
+//     if (!force_umount && fstab_entry->fs_mgr_flags.checkpoint_fs) {
+//         // Userdata is f2fs, simply remount it.
+//         if (!checkpoint_manager.Update(fstab_entry)) {
+//             LERROR << "Failed to remount userdata in checkpointing mode";
+//             return -1;
+//         }
+//         if (mount(block_device.c_str(), fstab_entry->mount_point.c_str(), "none",
+//                   MS_REMOUNT | fstab_entry->flags, fstab_entry->fs_options.c_str()) != 0) {
+//             PERROR << "Failed to remount userdata in checkpointing mode";
+//             return -1;
+//         }
+//     } else {
+//         LINFO << "Unmounting /data before remounting into checkpointing mode";
+//         if (!fs_mgr_unmount_all_data_mounts(block_device)) {
+//             LERROR << "Failed to umount /data";
+//             return -1;
+//         }
+//         DeviceMapper& dm = DeviceMapper::Instance();
+//         while (dm.IsDmBlockDevice(block_device)) {
+//             auto next_device = dm.GetParentBlockDeviceByPath(block_device);
+//             auto name = dm.GetDmDeviceNameByPath(block_device);
+//             if (!name) {
+//                 LERROR << "Failed to get dm-name for " << block_device;
+//                 return -1;
+//             }
+//             LINFO << "Deleting " << block_device << " named " << *name;
+//             if (!dm.DeleteDevice(*name, 3s)) {
+//                 return -1;
+//             }
+//             if (!next_device) {
+//                 LERROR << "Failed to find parent device for " << block_device;
+//             }
+//             block_device = *next_device;
+//         }
+//         LINFO << "Remounting /data";
+//         // TODO(b/143970043): remove this hack after fs_mgr_mount_all is refactored.
+//         auto result = fs_mgr_mount_all(fstab, MOUNT_MODE_ONLY_USERDATA);
+//         return result.code == FS_MGR_MNTALL_FAIL ? -1 : 0;
+//     }
+//     return 0;
+// }
 
 // wrapper to __mount() and expects a fully prepared fstab_rec,
 // unlike fs_mgr_do_mount which does more things with avb / verity etc.
@@ -1862,14 +1862,14 @@ static int fs_mgr_do_mount_helper(Fstab* fstab, const std::string& n_name,
             return FS_MGR_DOMNT_FAILED;
         }
 
-        if (fstab_entry.fs_mgr_flags.logical) {
-            if (!fs_mgr_update_logical_partition(&fstab_entry)) {
-                LERROR << "Could not set up logical partition, skipping!";
-                continue;
-            }
-        }
+        // if (fstab_entry.fs_mgr_flags.logical) {
+        //     if (!fs_mgr_update_logical_partition(&fstab_entry)) {
+        //         LERROR << "Could not set up logical partition, skipping!";
+        //         continue;
+        //     }
+        // }
 
-        WrapUserdataIfNeeded(&fstab_entry, n_blk_device);
+        // WrapUserdataIfNeeded(&fstab_entry, n_blk_device);
 
         if (!checkpoint_manager.Update(&fstab_entry, n_blk_device)) {
             LERROR << "Could not set up checkpoint partition, skipping!";
@@ -1973,88 +1973,88 @@ int fs_mgr_do_tmpfs_mount(const char *n_name)
     return 0;
 }
 
-static bool ConfigureIoScheduler(const std::string& device_path) {
-    if (!StartsWith(device_path, "/dev/")) {
-        LERROR << __func__ << ": invalid argument " << device_path;
-        return false;
-    }
+// static bool ConfigureIoScheduler(const std::string& device_path) {
+//     if (!StartsWith(device_path, "/dev/")) {
+//         LERROR << __func__ << ": invalid argument " << device_path;
+//         return false;
+//     }
 
-    const std::string iosched_path =
-            StringPrintf("/sys/block/%s/queue/scheduler", Basename(device_path).c_str());
-    unique_fd iosched_fd(open(iosched_path.c_str(), O_RDWR | O_CLOEXEC));
-    if (iosched_fd.get() == -1) {
-        PERROR << __func__ << ": failed to open " << iosched_path;
-        return false;
-    }
+//     const std::string iosched_path =
+//             StringPrintf("/sys/block/%s/queue/scheduler", Basename(device_path).c_str());
+//     unique_fd iosched_fd(open(iosched_path.c_str(), O_RDWR | O_CLOEXEC));
+//     if (iosched_fd.get() == -1) {
+//         PERROR << __func__ << ": failed to open " << iosched_path;
+//         return false;
+//     }
 
-    // Kernels before v4.1 only support 'noop'. Kernels [v4.1, v5.0) support
-    // 'noop' and 'none'. Kernels v5.0 and later only support 'none'.
-    static constexpr const std::array<std::string_view, 2> kNoScheduler = {"none", "noop"};
+//     // Kernels before v4.1 only support 'noop'. Kernels [v4.1, v5.0) support
+//     // 'noop' and 'none'. Kernels v5.0 and later only support 'none'.
+//     static constexpr const std::array<std::string_view, 2> kNoScheduler = {"none", "noop"};
 
-    for (const std::string_view& scheduler : kNoScheduler) {
-        int ret = write(iosched_fd.get(), scheduler.data(), scheduler.size());
-        if (ret > 0) {
-            return true;
-        }
-    }
+//     for (const std::string_view& scheduler : kNoScheduler) {
+//         int ret = write(iosched_fd.get(), scheduler.data(), scheduler.size());
+//         if (ret > 0) {
+//             return true;
+//         }
+//     }
 
-    PERROR << __func__ << ": failed to write to " << iosched_path;
-    return false;
-}
+//     PERROR << __func__ << ": failed to write to " << iosched_path;
+//     return false;
+// }
 
-static bool InstallZramDevice(const std::string& device) {
-    if (!android::base::WriteStringToFile(device, ZRAM_BACK_DEV)) {
-        PERROR << "Cannot write " << device << " in: " << ZRAM_BACK_DEV;
-        return false;
-    }
-    LINFO << "Success to set " << device << " to " << ZRAM_BACK_DEV;
-    return true;
-}
+// static bool InstallZramDevice(const std::string& device) {
+//     if (!android::base::WriteStringToFile(device, ZRAM_BACK_DEV)) {
+//         PERROR << "Cannot write " << device << " in: " << ZRAM_BACK_DEV;
+//         return false;
+//     }
+//     LINFO << "Success to set " << device << " to " << ZRAM_BACK_DEV;
+//     return true;
+// }
 
-static bool PrepareZramBackingDevice(off64_t size) {
+// static bool PrepareZramBackingDevice(off64_t size) {
 
-    constexpr const char* file_path = "/data/per_boot/zram_swap";
-    if (size == 0) return true;
+//     constexpr const char* file_path = "/data/per_boot/zram_swap";
+//     if (size == 0) return true;
 
-    // Prepare target path
-    unique_fd target_fd(TEMP_FAILURE_RETRY(open(file_path, O_RDWR | O_CREAT | O_CLOEXEC, 0600)));
-    if (target_fd.get() == -1) {
-        PERROR << "Cannot open target path: " << file_path;
-        return false;
-    }
-    if (fallocate(target_fd.get(), 0, 0, size) < 0) {
-        PERROR << "Cannot truncate target path: " << file_path;
-        return false;
-    }
+//     // Prepare target path
+//     unique_fd target_fd(TEMP_FAILURE_RETRY(open(file_path, O_RDWR | O_CREAT | O_CLOEXEC, 0600)));
+//     if (target_fd.get() == -1) {
+//         PERROR << "Cannot open target path: " << file_path;
+//         return false;
+//     }
+//     if (fallocate(target_fd.get(), 0, 0, size) < 0) {
+//         PERROR << "Cannot truncate target path: " << file_path;
+//         return false;
+//     }
 
-    // Allocate loop device and attach it to file_path.
-    LoopControl loop_control;
-    std::string loop_device;
-    if (!loop_control.Attach(target_fd.get(), 5s, &loop_device)) {
-        return false;
-    }
+//     // Allocate loop device and attach it to file_path.
+//     LoopControl loop_control;
+//     std::string loop_device;
+//     if (!loop_control.Attach(target_fd.get(), 5s, &loop_device)) {
+//         return false;
+//     }
 
-    ConfigureIoScheduler(loop_device);
+//     ConfigureIoScheduler(loop_device);
 
-    if (auto ret = ConfigureQueueDepth(loop_device, "/"); !ret.ok()) {
-        LOG(DEBUG) << "Failed to config queue depth: " << ret.error().message();
-    }
+//     if (auto ret = ConfigureQueueDepth(loop_device, "/"); !ret.ok()) {
+//         LOG(DEBUG) << "Failed to config queue depth: " << ret.error().message();
+//     }
 
-    // set block size & direct IO
-    unique_fd loop_fd(TEMP_FAILURE_RETRY(open(loop_device.c_str(), O_RDWR | O_CLOEXEC)));
-    if (loop_fd.get() == -1) {
-        PERROR << "Cannot open " << loop_device;
-        return false;
-    }
-    if (!LoopControl::SetAutoClearStatus(loop_fd.get())) {
-        PERROR << "Failed set LO_FLAGS_AUTOCLEAR for " << loop_device;
-    }
-    if (!LoopControl::EnableDirectIo(loop_fd.get())) {
-        return false;
-    }
+//     // set block size & direct IO
+//     unique_fd loop_fd(TEMP_FAILURE_RETRY(open(loop_device.c_str(), O_RDWR | O_CLOEXEC)));
+//     if (loop_fd.get() == -1) {
+//         PERROR << "Cannot open " << loop_device;
+//         return false;
+//     }
+//     if (!LoopControl::SetAutoClearStatus(loop_fd.get())) {
+//         PERROR << "Failed set LO_FLAGS_AUTOCLEAR for " << loop_device;
+//     }
+//     if (!LoopControl::EnableDirectIo(loop_fd.get())) {
+//         return false;
+//     }
 
-    return InstallZramDevice(loop_device);
-}
+//     return InstallZramDevice(loop_device);
+// }
 
 bool fs_mgr_swapon_all(const Fstab& fstab) {
     bool ret = true;
@@ -2064,34 +2064,34 @@ bool fs_mgr_swapon_all(const Fstab& fstab) {
             continue;
         }
 
-        if (entry.zram_size > 0) {
-            if (!PrepareZramBackingDevice(entry.zram_backingdev_size)) {
-                LERROR << "Failure of zram backing device file for '" << entry.blk_device << "'";
-            }
-            // A zram_size was specified, so we need to configure the
-            // device.  There is no point in having multiple zram devices
-            // on a system (all the memory comes from the same pool) so
-            // we can assume the device number is 0.
-            if (entry.max_comp_streams >= 0) {
-                auto zram_mcs_fp = std::unique_ptr<FILE, decltype(&fclose)>{
-                        fopen(ZRAM_CONF_MCS, "re"), fclose};
-                if (zram_mcs_fp == nullptr) {
-                    LERROR << "Unable to open zram conf comp device " << ZRAM_CONF_MCS;
-                    ret = false;
-                    continue;
-                }
-                fprintf(zram_mcs_fp.get(), "%d\n", entry.max_comp_streams);
-            }
+        // if (entry.zram_size > 0) {
+        //     if (!PrepareZramBackingDevice(entry.zram_backingdev_size)) {
+        //         LERROR << "Failure of zram backing device file for '" << entry.blk_device << "'";
+        //     }
+        //     // A zram_size was specified, so we need to configure the
+        //     // device.  There is no point in having multiple zram devices
+        //     // on a system (all the memory comes from the same pool) so
+        //     // we can assume the device number is 0.
+        //     if (entry.max_comp_streams >= 0) {
+        //         auto zram_mcs_fp = std::unique_ptr<FILE, decltype(&fclose)>{
+        //                 fopen(ZRAM_CONF_MCS, "re"), fclose};
+        //         if (zram_mcs_fp == nullptr) {
+        //             LERROR << "Unable to open zram conf comp device " << ZRAM_CONF_MCS;
+        //             ret = false;
+        //             continue;
+        //         }
+        //         fprintf(zram_mcs_fp.get(), "%d\n", entry.max_comp_streams);
+        //     }
 
-            auto zram_fp =
-                    std::unique_ptr<FILE, decltype(&fclose)>{fopen(ZRAM_CONF_DEV, "re+"), fclose};
-            if (zram_fp == nullptr) {
-                LERROR << "Unable to open zram conf device " << ZRAM_CONF_DEV;
-                ret = false;
-                continue;
-            }
-            fprintf(zram_fp.get(), "%" PRId64 "\n", entry.zram_size);
-        }
+        //     auto zram_fp =
+        //             std::unique_ptr<FILE, decltype(&fclose)>{fopen(ZRAM_CONF_DEV, "re+"), fclose};
+        //     if (zram_fp == nullptr) {
+        //         LERROR << "Unable to open zram conf device " << ZRAM_CONF_DEV;
+        //         ret = false;
+        //         continue;
+        //     }
+        //     fprintf(zram_fp.get(), "%" PRId64 "\n", entry.zram_size);
+        // }
 
         if (entry.fs_mgr_flags.wait && !WaitForFile(entry.blk_device, 20s)) {
             LERROR << "Skipping mkswap for '" << entry.blk_device << "'";
@@ -2131,87 +2131,87 @@ bool fs_mgr_swapon_all(const Fstab& fstab) {
     return ret;
 }
 
-bool fs_mgr_is_verity_enabled(const FstabEntry& entry) {
-    if (!entry.fs_mgr_flags.avb) {
-        return false;
-    }
+// bool fs_mgr_is_verity_enabled(const FstabEntry& entry) {
+//     if (!entry.fs_mgr_flags.avb) {
+//         return false;
+//     }
 
-    DeviceMapper& dm = DeviceMapper::Instance();
+//     DeviceMapper& dm = DeviceMapper::Instance();
 
-    std::string mount_point = GetVerityDeviceName(entry);
-    if (dm.GetState(mount_point) == DmDeviceState::INVALID) {
-        return false;
-    }
+//     std::string mount_point = GetVerityDeviceName(entry);
+//     if (dm.GetState(mount_point) == DmDeviceState::INVALID) {
+//         return false;
+//     }
 
-    std::vector<DeviceMapper::TargetInfo> table;
-    if (!dm.GetTableStatus(mount_point, &table) || table.empty() || table[0].data.empty()) {
-        return false;
-    }
+//     std::vector<DeviceMapper::TargetInfo> table;
+//     if (!dm.GetTableStatus(mount_point, &table) || table.empty() || table[0].data.empty()) {
+//         return false;
+//     }
 
-    auto status = table[0].data.c_str();
-    if (*status == 'C' || *status == 'V') {
-        return true;
-    }
+//     auto status = table[0].data.c_str();
+//     if (*status == 'C' || *status == 'V') {
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
-std::optional<HashtreeInfo> fs_mgr_get_hashtree_info(const android::fs_mgr::FstabEntry& entry) {
-    if (!entry.fs_mgr_flags.avb) {
-        return {};
-    }
-    DeviceMapper& dm = DeviceMapper::Instance();
-    std::string device = GetVerityDeviceName(entry);
+// std::optional<HashtreeInfo> fs_mgr_get_hashtree_info(const android::fs_mgr::FstabEntry& entry) {
+//     if (!entry.fs_mgr_flags.avb) {
+//         return {};
+//     }
+//     DeviceMapper& dm = DeviceMapper::Instance();
+//     std::string device = GetVerityDeviceName(entry);
 
-    std::vector<DeviceMapper::TargetInfo> table;
-    if (dm.GetState(device) == DmDeviceState::INVALID || !dm.GetTableInfo(device, &table)) {
-        return {};
-    }
-    for (const auto& target : table) {
-        if (strcmp(target.spec.target_type, "verity") != 0) {
-            continue;
-        }
+//     std::vector<DeviceMapper::TargetInfo> table;
+//     if (dm.GetState(device) == DmDeviceState::INVALID || !dm.GetTableInfo(device, &table)) {
+//         return {};
+//     }
+//     for (const auto& target : table) {
+//         if (strcmp(target.spec.target_type, "verity") != 0) {
+//             continue;
+//         }
 
-        // The format is stable for dm-verity version 0 & 1. And the data is expected to have
-        // the fixed format:
-        // <version> <dev> <hash_dev> <data_block_size> <hash_block_size> <num_data_blocks>
-        // <hash_start_block> <algorithm> <digest> <salt>
-        // Details in https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html
+//         // The format is stable for dm-verity version 0 & 1. And the data is expected to have
+//         // the fixed format:
+//         // <version> <dev> <hash_dev> <data_block_size> <hash_block_size> <num_data_blocks>
+//         // <hash_start_block> <algorithm> <digest> <salt>
+//         // Details in https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/verity.html
 
-        std::vector<std::string> tokens = android::base::Split(target.data, " \t\r\n");
-        if (tokens[0] != "0" && tokens[0] != "1") {
-            LOG(WARNING) << "Unrecognized device mapper version in " << target.data;
-            return {};
-        }
+//         std::vector<std::string> tokens = android::base::Split(target.data, " \t\r\n");
+//         if (tokens[0] != "0" && tokens[0] != "1") {
+//             LOG(WARNING) << "Unrecognized device mapper version in " << target.data;
+//             return {};
+//         }
 
-        // Hashtree algorithm & root digest are the 8th & 9th token in the output.
-        return HashtreeInfo{.algorithm = android::base::Trim(tokens[7]),
-                            .root_digest = android::base::Trim(tokens[8])};
-    }
+//         // Hashtree algorithm & root digest are the 8th & 9th token in the output.
+//         return HashtreeInfo{.algorithm = android::base::Trim(tokens[7]),
+//                             .root_digest = android::base::Trim(tokens[8])};
+//     }
 
-    return {};
-}
+//     return {};
+// }
 
-bool fs_mgr_verity_is_check_at_most_once(const android::fs_mgr::FstabEntry& entry) {
-    if (!entry.fs_mgr_flags.avb) {
-        return false;
-    }
+// bool fs_mgr_verity_is_check_at_most_once(const android::fs_mgr::FstabEntry& entry) {
+//     if (!entry.fs_mgr_flags.avb) {
+//         return false;
+//     }
 
-    DeviceMapper& dm = DeviceMapper::Instance();
-    std::string device = GetVerityDeviceName(entry);
+//     DeviceMapper& dm = DeviceMapper::Instance();
+//     std::string device = GetVerityDeviceName(entry);
 
-    std::vector<DeviceMapper::TargetInfo> table;
-    if (dm.GetState(device) == DmDeviceState::INVALID || !dm.GetTableInfo(device, &table)) {
-        return false;
-    }
-    for (const auto& target : table) {
-        if (strcmp(target.spec.target_type, "verity") == 0 &&
-            target.data.find("check_at_most_once") != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
-}
+//     std::vector<DeviceMapper::TargetInfo> table;
+//     if (dm.GetState(device) == DmDeviceState::INVALID || !dm.GetTableInfo(device, &table)) {
+//         return false;
+//     }
+//     for (const auto& target : table) {
+//         if (strcmp(target.spec.target_type, "verity") == 0 &&
+//             target.data.find("check_at_most_once") != std::string::npos) {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 std::string fs_mgr_get_super_partition_name(int slot) {
     // Devices upgrading to dynamic partitions are allowed to specify a super
@@ -2257,97 +2257,97 @@ bool fs_mgr_create_canonical_mount_point(const std::string& mount_point) {
     return ok;
 }
 
-bool fs_mgr_mount_overlayfs_fstab_entry(const FstabEntry& entry) {
-    auto overlayfs_valid_result = fs_mgr_overlayfs_valid();
-    if (overlayfs_valid_result == OverlayfsValidResult::kNotSupported) {
-        LERROR << __FUNCTION__ << "(): kernel does not support overlayfs";
-        return false;
-    }
+// bool fs_mgr_mount_overlayfs_fstab_entry(const FstabEntry& entry) {
+//     auto overlayfs_valid_result = fs_mgr_overlayfs_valid();
+//     if (overlayfs_valid_result == OverlayfsValidResult::kNotSupported) {
+//         LERROR << __FUNCTION__ << "(): kernel does not support overlayfs";
+//         return false;
+//     }
 
-#if ALLOW_ADBD_DISABLE_VERITY == 0
-    // Allowlist the mount point if user build.
-    static const std::vector<const std::string> kAllowedPaths = {
-            "/odm",         "/odm_dlkm",   "/oem",    "/product",
-            "/system_dlkm", "/system_ext", "/vendor", "/vendor_dlkm",
-    };
-    static const std::vector<const std::string> kAllowedPrefixes = {
-            "/mnt/product/",
-            "/mnt/vendor/",
-    };
-    if (std::none_of(kAllowedPaths.begin(), kAllowedPaths.end(),
-                     [&entry](const auto& path) -> bool {
-                         return entry.mount_point == path ||
-                                StartsWith(entry.mount_point, path + "/");
-                     }) &&
-        std::none_of(kAllowedPrefixes.begin(), kAllowedPrefixes.end(),
-                     [&entry](const auto& prefix) -> bool {
-                         return entry.mount_point != prefix &&
-                                StartsWith(entry.mount_point, prefix);
-                     })) {
-        LERROR << __FUNCTION__
-               << "(): mount point is forbidden on user build: " << entry.mount_point;
-        return false;
-    }
-#endif  // ALLOW_ADBD_DISABLE_VERITY == 0
+// #if ALLOW_ADBD_DISABLE_VERITY == 0
+//     // Allowlist the mount point if user build.
+//     static const std::vector<const std::string> kAllowedPaths = {
+//             "/odm",         "/odm_dlkm",   "/oem",    "/product",
+//             "/system_dlkm", "/system_ext", "/vendor", "/vendor_dlkm",
+//     };
+//     static const std::vector<const std::string> kAllowedPrefixes = {
+//             "/mnt/product/",
+//             "/mnt/vendor/",
+//     };
+//     if (std::none_of(kAllowedPaths.begin(), kAllowedPaths.end(),
+//                      [&entry](const auto& path) -> bool {
+//                          return entry.mount_point == path ||
+//                                 StartsWith(entry.mount_point, path + "/");
+//                      }) &&
+//         std::none_of(kAllowedPrefixes.begin(), kAllowedPrefixes.end(),
+//                      [&entry](const auto& prefix) -> bool {
+//                          return entry.mount_point != prefix &&
+//                                 StartsWith(entry.mount_point, prefix);
+//                      })) {
+//         LERROR << __FUNCTION__
+//                << "(): mount point is forbidden on user build: " << entry.mount_point;
+//         return false;
+//     }
+// #endif  // ALLOW_ADBD_DISABLE_VERITY == 0
 
-    if (!fs_mgr_create_canonical_mount_point(entry.mount_point)) {
-        return false;
-    }
+//     if (!fs_mgr_create_canonical_mount_point(entry.mount_point)) {
+//         return false;
+//     }
 
-    auto lowerdir = entry.lowerdir;
-    if (entry.fs_mgr_flags.overlayfs_remove_missing_lowerdir) {
-        bool removed_any = false;
-        std::vector<std::string> lowerdirs;
-        for (const auto& dir : android::base::Split(entry.lowerdir, ":")) {
-            if (access(dir.c_str(), F_OK)) {
-                PWARNING << __FUNCTION__ << "(): remove missing lowerdir '" << dir << "'";
-                removed_any = true;
-            } else {
-                lowerdirs.push_back(dir);
-            }
-        }
-        if (removed_any) {
-            lowerdir = android::base::Join(lowerdirs, ":");
-        }
-    }
+//     auto lowerdir = entry.lowerdir;
+//     if (entry.fs_mgr_flags.overlayfs_remove_missing_lowerdir) {
+//         bool removed_any = false;
+//         std::vector<std::string> lowerdirs;
+//         for (const auto& dir : android::base::Split(entry.lowerdir, ":")) {
+//             if (access(dir.c_str(), F_OK)) {
+//                 PWARNING << __FUNCTION__ << "(): remove missing lowerdir '" << dir << "'";
+//                 removed_any = true;
+//             } else {
+//                 lowerdirs.push_back(dir);
+//             }
+//         }
+//         if (removed_any) {
+//             lowerdir = android::base::Join(lowerdirs, ":");
+//         }
+//     }
 
-    auto options = "lowerdir=" + lowerdir;
-    if (overlayfs_valid_result == OverlayfsValidResult::kOverrideCredsRequired) {
-        options += ",override_creds=off";
-    }
+//     auto options = "lowerdir=" + lowerdir;
+//     if (overlayfs_valid_result == OverlayfsValidResult::kOverrideCredsRequired) {
+//         options += ",override_creds=off";
+//     }
 
-    // Use "overlay-" + entry.blk_device as the mount() source, so that adb-remout-test don't
-    // confuse this with adb remount overlay, whose device name is "overlay".
-    // Overlayfs is a pseudo filesystem, so the source device is a symbolic value and isn't used to
-    // back the filesystem. However the device name would be shown in /proc/mounts.
-    auto source = "overlay-" + entry.blk_device;
-    auto report = "__mount(source=" + source + ",target=" + entry.mount_point + ",type=overlay," +
-                  options + ")=";
-    auto ret = mount(source.c_str(), entry.mount_point.c_str(), "overlay", MS_RDONLY | MS_NOATIME,
-                     options.c_str());
-    if (ret) {
-        PERROR << report << ret;
-        return false;
-    }
-    LINFO << report << ret;
-    return true;
-}
+//     // Use "overlay-" + entry.blk_device as the mount() source, so that adb-remout-test don't
+//     // confuse this with adb remount overlay, whose device name is "overlay".
+//     // Overlayfs is a pseudo filesystem, so the source device is a symbolic value and isn't used to
+//     // back the filesystem. However the device name would be shown in /proc/mounts.
+//     auto source = "overlay-" + entry.blk_device;
+//     auto report = "__mount(source=" + source + ",target=" + entry.mount_point + ",type=overlay," +
+//                   options + ")=";
+//     auto ret = mount(source.c_str(), entry.mount_point.c_str(), "overlay", MS_RDONLY | MS_NOATIME,
+//                      options.c_str());
+//     if (ret) {
+//         PERROR << report << ret;
+//         return false;
+//     }
+//     LINFO << report << ret;
+//     return true;
+// }
 
-bool fs_mgr_load_verity_state(int* mode) {
-    // unless otherwise specified, use EIO mode.
-    *mode = VERITY_MODE_EIO;
+// bool fs_mgr_load_verity_state(int* mode) {
+//     // unless otherwise specified, use EIO mode.
+//     *mode = VERITY_MODE_EIO;
 
-    // The bootloader communicates verity mode via the kernel commandline
-    std::string verity_mode;
-    if (!fs_mgr_get_boot_config("veritymode", &verity_mode)) {
-        return false;
-    }
+//     // The bootloader communicates verity mode via the kernel commandline
+//     std::string verity_mode;
+//     if (!fs_mgr_get_boot_config("veritymode", &verity_mode)) {
+//         return false;
+//     }
 
-    if (verity_mode == "enforcing") {
-        *mode = VERITY_MODE_DEFAULT;
-    } else if (verity_mode == "logging") {
-        *mode = VERITY_MODE_LOGGING;
-    }
+//     if (verity_mode == "enforcing") {
+//         *mode = VERITY_MODE_DEFAULT;
+//     } else if (verity_mode == "logging") {
+//         *mode = VERITY_MODE_LOGGING;
+//     }
 
-    return true;
-}
+//     return true;
+// }

@@ -35,6 +35,7 @@
 
 #include <libdm/dm.h>
 #include <liblp/liblp.h>
+#error do not use
 
 namespace android {
 namespace fs_mgr {

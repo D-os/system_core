@@ -24,7 +24,7 @@
 #include <string>
 
 #include "fs_mgr.h"
-#include "fs_mgr_dm_linear.h"
+// #include "fs_mgr_dm_linear.h"
 #include "fs_mgr_priv.h"
 
 namespace android {
@@ -88,22 +88,22 @@ bool TryPathMount(FstabEntry* rec, const std::string& mount_pt) {
 
     // If we can't acquire the block device for a logical partition, it likely
     // was never created. In that case we try to create it.
-    if (rec->fs_mgr_flags.logical && !fs_mgr_update_logical_partition(rec)) {
-        if (gDidMapLogicalPartitions) {
-            LERROR << "Failed to find block device for partition";
-            return false;
-        }
-        std::string super_name = fs_mgr_get_super_partition_name();
-        if (!android::fs_mgr::CreateLogicalPartitions("/dev/block/by-name/" + super_name)) {
-            LERROR << "Failed to create logical partitions";
-            return false;
-        }
-        gDidMapLogicalPartitions = true;
-        if (!fs_mgr_update_logical_partition(rec)) {
-            LERROR << "Failed to find block device for partition";
-            return false;
-        }
-    }
+    // if (rec->fs_mgr_flags.logical && !fs_mgr_update_logical_partition(rec)) {
+    //     if (gDidMapLogicalPartitions) {
+    //         LERROR << "Failed to find block device for partition";
+    //         return false;
+    //     }
+    //     std::string super_name = fs_mgr_get_super_partition_name();
+    //     if (!android::fs_mgr::CreateLogicalPartitions("/dev/block/by-name/" + super_name)) {
+    //         LERROR << "Failed to create logical partitions";
+    //         return false;
+    //     }
+    //     gDidMapLogicalPartitions = true;
+    //     if (!fs_mgr_update_logical_partition(rec)) {
+    //         LERROR << "Failed to find block device for partition";
+    //         return false;
+    //     }
+    // }
 
     const std::string mount_point = mount_pt.empty() ? rec->mount_point : mount_pt;
 

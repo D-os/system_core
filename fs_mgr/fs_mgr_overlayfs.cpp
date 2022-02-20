@@ -48,7 +48,7 @@
 #include <fs_mgr_dm_linear.h>
 #include <fs_mgr_overlayfs.h>
 #include <fstab/fstab.h>
-#include <libdm/dm.h>
+// #include <libdm/dm.h>
 // #include <libfiemap/image_manager.h>
 // #include <libgsi/libgsi.h>
 #include <liblp/builder.h>

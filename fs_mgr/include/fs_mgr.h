@@ -90,19 +90,19 @@ int fs_mgr_do_mount(android::fs_mgr::Fstab* fstab, const char* n_name, char* n_b
 int fs_mgr_do_mount_one(const android::fs_mgr::FstabEntry& entry,
                         const std::string& mount_point = "");
 int fs_mgr_do_tmpfs_mount(const char *n_name);
-bool fs_mgr_load_verity_state(int* mode);
+// bool fs_mgr_load_verity_state(int* mode);
 // Returns true if verity is enabled on this particular FstabEntry.
-bool fs_mgr_is_verity_enabled(const android::fs_mgr::FstabEntry& entry);
+// bool fs_mgr_is_verity_enabled(const android::fs_mgr::FstabEntry& entry);
 // Returns the verity hashtree information of this particular FstabEntry. Returns std::nullopt
 // if the input isn't a dm-verity entry, or if there is an error.
 std::optional<HashtreeInfo> fs_mgr_get_hashtree_info(const android::fs_mgr::FstabEntry& entry);
 
 bool fs_mgr_swapon_all(const android::fs_mgr::Fstab& fstab);
-bool fs_mgr_update_logical_partition(android::fs_mgr::FstabEntry* entry);
+// bool fs_mgr_update_logical_partition(android::fs_mgr::FstabEntry* entry);
 
 // Returns true if the given fstab entry has verity enabled, *and* the verity
 // device is in "check_at_most_once" mode.
-bool fs_mgr_verity_is_check_at_most_once(const android::fs_mgr::FstabEntry& entry);
+// bool fs_mgr_verity_is_check_at_most_once(const android::fs_mgr::FstabEntry& entry);
 
 int fs_mgr_do_format(const android::fs_mgr::FstabEntry& entry);
 
@@ -129,9 +129,9 @@ enum FsMgrUmountStatus : int {
 int fs_mgr_umount_all(android::fs_mgr::Fstab* fstab);
 
 // Finds a entry in |fstab| that was used to mount a /data on |data_block_device|.
-android::fs_mgr::FstabEntry* fs_mgr_get_mounted_entry_for_userdata(
-        android::fs_mgr::Fstab* fstab, const std::string& data_block_device);
-int fs_mgr_remount_userdata_into_checkpointing(android::fs_mgr::Fstab* fstab);
+// android::fs_mgr::FstabEntry* fs_mgr_get_mounted_entry_for_userdata(
+//         android::fs_mgr::Fstab* fstab, const std::string& data_block_device);
+// int fs_mgr_remount_userdata_into_checkpointing(android::fs_mgr::Fstab* fstab);
 
 // Finds the dm_bow device on which this block device is stacked, or returns
 // empty string
@@ -144,4 +144,4 @@ bool fs_mgr_create_canonical_mount_point(const std::string& mount_point);
 // Like fs_mgr_do_mount_one() but for overlayfs fstab entries.
 // Unlike fs_mgr_overlayfs, mount overlayfs without upperdir and workdir, so the
 // filesystem cannot be remount read-write.
-bool fs_mgr_mount_overlayfs_fstab_entry(const android::fs_mgr::FstabEntry& entry);
+// bool fs_mgr_mount_overlayfs_fstab_entry(const android::fs_mgr::FstabEntry& entry);

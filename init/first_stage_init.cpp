@@ -176,7 +176,7 @@ bool LoadKernelModules(bool recovery, bool want_console, bool want_parallel, int
 
     std::unique_ptr<DIR, decltype(&closedir)> base_dir(opendir(MODULE_BASE_DIR), closedir);
     if (!base_dir) {
-        LOG(INFO) << "Unable to open /lib/modules, skipping module loading.";
+        LOG(INFO) << "Unable to open " MODULE_BASE_DIR ", skipping module loading.";
         return true;
     }
     dirent* entry;

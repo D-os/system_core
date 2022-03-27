@@ -42,10 +42,10 @@ static bool KernelConsolePresent(const std::string& cmdline) {
 }
 
 static bool SetupConsole() {
-    if (mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1))) {
-        PLOG(ERROR) << "unable to create /dev/console";
-        return false;
-    }
+    // if (mknod("/dev/console", S_IFCHR | 0600, makedev(5, 1))) {
+    //     PLOG(ERROR) << "unable to create /dev/console";
+    //     return false;
+    // }
     int fd = -1;
     int tries = 50;  // should timeout after 5s
     // The device driver for console may not be ready yet so retry for a while in case of failure.

@@ -1184,42 +1184,42 @@ bool LoadPropertyInfoFromFile(const std::string& filename,
 
 void CreateSerializedPropertyInfo() {
     auto property_infos = std::vector<PropertyInfoEntry>();
-    if (access("/system/etc/selinux/plat_property_contexts", R_OK) != -1) {
-        if (!LoadPropertyInfoFromFile("/system/etc/selinux/plat_property_contexts",
-                                      &property_infos)) {
-            return;
-        }
-        // Don't check for failure here, since we don't always have all of these partitions.
-        // E.g. In case of recovery, the vendor partition will not have mounted and we
-        // still need the system / platform properties to function.
-        if (access("/dev/selinux/apex_property_contexts", R_OK) != -1) {
-            LoadPropertyInfoFromFile("/dev/selinux/apex_property_contexts", &property_infos);
-        }
-        if (access("/system_ext/etc/selinux/system_ext_property_contexts", R_OK) != -1) {
-            LoadPropertyInfoFromFile("/system_ext/etc/selinux/system_ext_property_contexts",
-                                     &property_infos);
-        }
-        if (access("/vendor/etc/selinux/vendor_property_contexts", R_OK) != -1) {
-            LoadPropertyInfoFromFile("/vendor/etc/selinux/vendor_property_contexts",
-                                     &property_infos);
-        }
-        if (access("/product/etc/selinux/product_property_contexts", R_OK) != -1) {
-            LoadPropertyInfoFromFile("/product/etc/selinux/product_property_contexts",
-                                     &property_infos);
-        }
-        if (access("/odm/etc/selinux/odm_property_contexts", R_OK) != -1) {
-            LoadPropertyInfoFromFile("/odm/etc/selinux/odm_property_contexts", &property_infos);
-        }
-    } else {
-        if (!LoadPropertyInfoFromFile("/plat_property_contexts", &property_infos)) {
-            return;
-        }
-        LoadPropertyInfoFromFile("/system_ext_property_contexts", &property_infos);
-        LoadPropertyInfoFromFile("/vendor_property_contexts", &property_infos);
-        LoadPropertyInfoFromFile("/product_property_contexts", &property_infos);
-        LoadPropertyInfoFromFile("/odm_property_contexts", &property_infos);
-        LoadPropertyInfoFromFile("/dev/selinux/apex_property_contexts", &property_infos);
-    }
+    // if (access("/system/etc/selinux/plat_property_contexts", R_OK) != -1) {
+    //     if (!LoadPropertyInfoFromFile("/system/etc/selinux/plat_property_contexts",
+    //                                   &property_infos)) {
+    //         return;
+    //     }
+    //     // Don't check for failure here, since we don't always have all of these partitions.
+    //     // E.g. In case of recovery, the vendor partition will not have mounted and we
+    //     // still need the system / platform properties to function.
+    //     if (access("/dev/selinux/apex_property_contexts", R_OK) != -1) {
+    //         LoadPropertyInfoFromFile("/dev/selinux/apex_property_contexts", &property_infos);
+    //     }
+    //     if (access("/system_ext/etc/selinux/system_ext_property_contexts", R_OK) != -1) {
+    //         LoadPropertyInfoFromFile("/system_ext/etc/selinux/system_ext_property_contexts",
+    //                                  &property_infos);
+    //     }
+    //     if (access("/vendor/etc/selinux/vendor_property_contexts", R_OK) != -1) {
+    //         LoadPropertyInfoFromFile("/vendor/etc/selinux/vendor_property_contexts",
+    //                                  &property_infos);
+    //     }
+    //     if (access("/product/etc/selinux/product_property_contexts", R_OK) != -1) {
+    //         LoadPropertyInfoFromFile("/product/etc/selinux/product_property_contexts",
+    //                                  &property_infos);
+    //     }
+    //     if (access("/odm/etc/selinux/odm_property_contexts", R_OK) != -1) {
+    //         LoadPropertyInfoFromFile("/odm/etc/selinux/odm_property_contexts", &property_infos);
+    //     }
+    // } else {
+    //     if (!LoadPropertyInfoFromFile("/plat_property_contexts", &property_infos)) {
+    //         return;
+    //     }
+    //     LoadPropertyInfoFromFile("/system_ext_property_contexts", &property_infos);
+    //     LoadPropertyInfoFromFile("/vendor_property_contexts", &property_infos);
+    //     LoadPropertyInfoFromFile("/product_property_contexts", &property_infos);
+    //     LoadPropertyInfoFromFile("/odm_property_contexts", &property_infos);
+    //     LoadPropertyInfoFromFile("/dev/selinux/apex_property_contexts", &property_infos);
+    // }
 
     auto serialized_contexts = std::string();
     auto error = std::string();

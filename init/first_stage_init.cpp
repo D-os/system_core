@@ -426,7 +426,7 @@ int FirstStageMain(int argc, char** argv) {
            1);
 
     const char* path = "/system/bin/init";
-    const char* args[] = {path, "selinux_setup", nullptr};
+    const char* args[] = {path, "second_stage", nullptr};
     auto fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -434,7 +434,7 @@ int FirstStageMain(int argc, char** argv) {
     execv(path, const_cast<char**>(args));
 
     // execv() only returns if an error happened, in which case we
-    // panic and never fall through this conditional.
+    // panic and never return from this function.
     PLOG(FATAL) << "execv(\"" << path << "\") failed";
 
     return 1;

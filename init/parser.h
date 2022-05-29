@@ -17,6 +17,7 @@
 #ifndef _INIT_PARSER_H_
 #define _INIT_PARSER_H_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>

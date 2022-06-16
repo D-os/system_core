@@ -60,7 +60,7 @@ Result<void> check_chown(const BuiltinArguments& args) {
 
     // GID is optional and pushes the index of path out by one if specified.
     if (args.size() == 4 && !args[2].empty()) {
-        auto gid = DecodeUid(args[2]);
+        auto gid = DecodeGid(args[2]);
         if (!gid.ok()) {
             return Error() << "Unable to decode GID for '" << args[2] << "': " << gid.error();
         }

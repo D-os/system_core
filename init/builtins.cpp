@@ -1015,7 +1015,7 @@ static Result<void> do_chown(const BuiltinArguments& args) {
     Result<gid_t> gid = -1;
 
     if (args.size() == 4) {
-        gid = DecodeUid(args[2]);
+        gid = DecodeGid(args[2]);
         if (!gid.ok()) {
             return Error() << "Unable to decode GID for '" << args[2] << "': " << gid.error();
         }

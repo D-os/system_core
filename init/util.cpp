@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -73,6 +74,23 @@ Result<uid_t> DecodeUid(const std::string& name) {
         if (!pwd) return ErrnoError() << "getpwnam failed";
 
         return pwd->pw_uid;
+    }
+
+    errno = 0;
+    uid_t result = static_cast<uid_t>(strtoul(name.c_str(), 0, 0));
+    if (errno) return ErrnoError() << "strtoul failed";
+
+    return result;
+}
+
+// DecodeGid() - decodes and returns the given string, which can be either the
+// numeric or name representation, into the integer uid or gid.
+Result<gid_t> DecodeGid(const std::string& name) {
+    if (isalpha(name[0])) {
+        group* gid = getgrnam(name.c_str());
+        if (!gid) return ErrnoError() << "getgrnam failed";
+
+        return gid->gr_gid;
     }
 
     errno = 0;
@@ -505,7 +523,7 @@ Result<MkdirOptions> ParseMkdir(const std::vector<std::string>& args) {
                 }
                 break;
             case 4:
-                gid = DecodeUid(args[4]);
+                gid = DecodeGid(args[4]);
                 if (!gid.ok()) {
                     return Error()
                            << "Unable to decode GID for '" << args[4] << "': " << gid.error();

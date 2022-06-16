@@ -835,13 +835,13 @@ Result<std::unique_ptr<Service>> Service::MakeTemporaryOneshotService(
     Result<gid_t> gid = 0;
     std::vector<gid_t> supp_gids;
     if (command_arg > 4) {
-        gid = DecodeUid(args[3]);
+        gid = DecodeGid(args[3]);
         if (!gid.ok()) {
             return Error() << "Unable to decode GID for '" << args[3] << "': " << gid.error();
         }
         std::size_t nr_supp_gids = command_arg - 1 /* -- */ - 4 /* exec SECLABEL UID GID */;
         for (size_t i = 0; i < nr_supp_gids; ++i) {
-            auto supp_gid = DecodeUid(args[4 + i]);
+            auto supp_gid = DecodeGid(args[4 + i]);
             if (!supp_gid.ok()) {
                 return Error() << "Unable to decode GID for '" << args[4 + i]
                                << "': " << supp_gid.error();

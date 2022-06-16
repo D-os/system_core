@@ -152,14 +152,14 @@ Result<void> ServiceParser::ParseEnterNamespace(std::vector<std::string>&& args)
 }
 
 Result<void> ServiceParser::ParseGroup(std::vector<std::string>&& args) {
-    auto gid = DecodeUid(args[1]);
+    auto gid = DecodeGid(args[1]);
     if (!gid.ok()) {
         return Error() << "Unable to decode GID for '" << args[1] << "': " << gid.error();
     }
     service_->proc_attr_.gid = *gid;
 
     for (std::size_t n = 2; n < args.size(); n++) {
-        gid = DecodeUid(args[n]);
+        gid = DecodeGid(args[n]);
         if (!gid.ok()) {
             return Error() << "Unable to decode GID for '" << args[n] << "': " << gid.error();
         }

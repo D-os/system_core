@@ -252,7 +252,7 @@ static bool ReadDescriptors(std::map<std::string, CgroupDescriptor>* descriptors
 }
 
 // To avoid issues in sdk_mac build
-#if defined(__ANDROID__)
+#if defined(__ANDROID__) || defined(__linux__)
 
 static bool SetupCgroup(const CgroupDescriptor& descriptor) {
     const format::CgroupController* controller = descriptor.controller();

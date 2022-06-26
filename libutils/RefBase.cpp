@@ -52,7 +52,7 @@
 
 #if defined(__linux__)
 // CallStack is only supported on linux type platforms.
-#define CALLSTACK_ENABLED 1
+#define CALLSTACK_ENABLED 0
 #else
 #define CALLSTACK_ENABLED 0
 #endif

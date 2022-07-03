@@ -29,7 +29,7 @@
 #include <android-base/properties.h>
 #include <android-base/strings.h>
 #include <cutils/android_reboot.h>
-#include <unwindstack/AndroidUnwinder.h>
+// #include <unwindstack/AndroidUnwinder.h>
 
 #include "capabilities.h"
 #include "reboot_utils.h"
@@ -159,14 +159,14 @@ void __attribute__((noreturn)) InitFatalReboot(int signal_number) {
 
     // In the parent, let's try to get a backtrace then shutdown.
     LOG(ERROR) << __FUNCTION__ << ": signal " << signal_number;
-    unwindstack::AndroidLocalUnwinder unwinder;
-    unwindstack::AndroidUnwinderData data;
-    if (!unwinder.Unwind(data)) {
-        LOG(ERROR) << __FUNCTION__ << ": Failed to unwind callstack: " << data.GetErrorString();
-    }
-    for (const auto& frame : data.frames) {
-        LOG(ERROR) << unwinder.FormatFrame(frame);
-    }
+    // unwindstack::AndroidLocalUnwinder unwinder;
+    // unwindstack::AndroidUnwinderData data;
+    // if (!unwinder.Unwind(data)) {
+    //     LOG(ERROR) << __FUNCTION__ << ": Failed to unwind callstack: " << data.GetErrorString();
+    // }
+    // for (const auto& frame : data.frames) {
+    //     LOG(ERROR) << unwinder.FormatFrame(frame);
+    // }
     if (init_fatal_panic) {
         LOG(ERROR) << __FUNCTION__ << ": Trigger crash";
         android::base::WriteStringToFile("c", PROC_SYSRQ);

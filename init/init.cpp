@@ -256,17 +256,17 @@ static class ShutdownState {
     bool do_shutdown_ = false;
 } shutdown_state;
 
-static void UnwindMainThreadStack() {
-    unwindstack::AndroidLocalUnwinder unwinder;
-    unwindstack::AndroidUnwinderData data;
-    if (!unwinder.Unwind(data)) {
-        LOG(ERROR) << __FUNCTION__
-                   << "sys.powerctl: Failed to unwind callstack: " << data.GetErrorString();
-    }
-    for (const auto& frame : data.frames) {
-        LOG(ERROR) << "sys.powerctl: " << unwinder.FormatFrame(frame);
-    }
-}
+// static void UnwindMainThreadStack() {
+//     unwindstack::AndroidLocalUnwinder unwinder;
+//     unwindstack::AndroidUnwinderData data;
+//     if (!unwinder.Unwind(data)) {
+//         LOG(ERROR) << __FUNCTION__
+//                    << "sys.powerctl: Failed to unwind callstack: " << data.GetErrorString();
+//     }
+//     for (const auto& frame : data.frames) {
+//         LOG(ERROR) << "sys.powerctl: " << unwinder.FormatFrame(frame);
+//     }
+// }
 
 void DebugRebootLogging() {
     LOG(INFO) << "sys.powerctl: do_shutdown: " << shutdown_state.do_shutdown()

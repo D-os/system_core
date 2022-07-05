@@ -25,7 +25,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <linux/ashmem.h>
+// #include <linux/ashmem.h>
 #include <linux/memfd.h>
 #include <log/log.h>
 #include <pthread.h>
@@ -364,39 +364,39 @@ static int memfd_create_region(const char* name, size_t size) {
  */
 int ashmem_create_region(const char *name, size_t size)
 {
-    int ret, save_errno;
+    // int ret, save_errno;
 
-    if (has_memfd_support()) {
+    // if (has_memfd_support()) {
         return memfd_create_region(name ? name : "none", size);
-    }
+//     }
 
-    int fd = __ashmem_open();
-    if (fd < 0) {
-        return fd;
-    }
+//     int fd = __ashmem_open();
+//     if (fd < 0) {
+//         return fd;
+//     }
 
-    if (name) {
-        char buf[ASHMEM_NAME_LEN] = {0};
+//     if (name) {
+//         char buf[ASHMEM_NAME_LEN] = {0};
 
-        strlcpy(buf, name, sizeof(buf));
-        ret = TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_NAME, buf));
-        if (ret < 0) {
-            goto error;
-        }
-    }
+//         strlcpy(buf, name, sizeof(buf));
+//         ret = TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_NAME, buf));
+//         if (ret < 0) {
+//             goto error;
+//         }
+//     }
 
-    ret = TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_SIZE, size));
-    if (ret < 0) {
-        goto error;
-    }
+//     ret = TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_SIZE, size));
+//     if (ret < 0) {
+//         goto error;
+//     }
 
-    return fd;
+//     return fd;
 
-error:
-    save_errno = errno;
-    close(fd);
-    errno = save_errno;
-    return ret;
+// error:
+//     save_errno = errno;
+//     close(fd);
+//     errno = save_errno;
+//     return ret;
 }
 
 static int memfd_set_prot_region(int fd, int prot) {
@@ -416,11 +416,11 @@ static int memfd_set_prot_region(int fd, int prot) {
 
 int ashmem_set_prot_region(int fd, int prot)
 {
-    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+    // if (has_memfd_support() && !memfd_is_ashmem(fd)) {
         return memfd_set_prot_region(fd, prot);
-    }
+    // }
 
-    return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_PROT_MASK, prot)));
+    // return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_SET_PROT_MASK, prot)));
 }
 
 int ashmem_pin_region(int fd, size_t offset, size_t len)
@@ -430,13 +430,13 @@ int ashmem_pin_region(int fd, size_t offset, size_t len)
         pin_deprecation_warn = true;
     }
 
-    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+    // if (has_memfd_support() && !memfd_is_ashmem(fd)) {
         return 0;
-    }
+    // }
 
-    // TODO: should LP64 reject too-large offset/len?
-    ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
-    return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_PIN, &pin)));
+    // // TODO: should LP64 reject too-large offset/len?
+    // ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
+    // return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_PIN, &pin)));
 }
 
 int ashmem_unpin_region(int fd, size_t offset, size_t len)
@@ -446,18 +446,18 @@ int ashmem_unpin_region(int fd, size_t offset, size_t len)
         pin_deprecation_warn = true;
     }
 
-    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+    // if (has_memfd_support() && !memfd_is_ashmem(fd)) {
         return 0;
-    }
+    // }
 
-    // TODO: should LP64 reject too-large offset/len?
-    ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
-    return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_UNPIN, &pin)));
+    // // TODO: should LP64 reject too-large offset/len?
+    // ashmem_pin pin = { static_cast<uint32_t>(offset), static_cast<uint32_t>(len) };
+    // return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_UNPIN, &pin)));
 }
 
 int ashmem_get_size_region(int fd)
 {
-    if (has_memfd_support() && !memfd_is_ashmem(fd)) {
+    // if (has_memfd_support() && !memfd_is_ashmem(fd)) {
         struct stat sb;
 
         if (fstat(fd, &sb) == -1) {
@@ -470,7 +470,7 @@ int ashmem_get_size_region(int fd)
         }
 
         return sb.st_size;
-    }
+    // }
 
-    return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_GET_SIZE, NULL)));
+    // return __ashmem_check_failure(fd, TEMP_FAILURE_RETRY(ioctl(fd, ASHMEM_GET_SIZE, NULL)));
 }

@@ -15,6 +15,7 @@
  */
 
 // #define LOG_NDEBUG 0
+#define __ANDROID__
 #define LOG_TAG "libutils.threads"
 
 #include <assert.h>
@@ -41,7 +42,7 @@
 #include <processgroup/sched_policy.h>
 #endif
 
-#if defined(__ANDROID__)
+#if 0
 # define __android_unused
 #else
 # define __android_unused __attribute__((__unused__))
@@ -169,12 +170,12 @@ int androidCreateRawThreadEtc(android_thread_func_t entryFunction,
     return 1;
 }
 
-#if defined(__ANDROID__)
-static pthread_t android_thread_id_t_to_pthread(android_thread_id_t thread)
-{
-    return (pthread_t) thread;
-}
-#endif
+// #if defined(__ANDROID__)
+// static pthread_t android_thread_id_t_to_pthread(android_thread_id_t thread)
+// {
+//     return (pthread_t) thread;
+// }
+// #endif
 
 android_thread_id_t androidGetThreadId()
 {
@@ -829,13 +830,13 @@ pid_t Thread::getTid() const
     // mTid is not defined until the child initializes it, and the caller may need it earlier
     Mutex::Autolock _l(mLock);
     pid_t tid;
-    if (mRunning) {
-        pthread_t pthread = android_thread_id_t_to_pthread(mThread);
-        tid = pthread_gettid_np(pthread);
-    } else {
-        ALOGW("Thread (this=%p): getTid() is undefined before run()", this);
+    // if (mRunning) {
+    //     pthread_t pthread = android_thread_id_t_to_pthread(mThread);
+    //     tid = pthread_gettid_np(pthread);
+    // } else {
+    //     ALOGW("Thread (this=%p): getTid() is undefined before run()", this);
         tid = -1;
-    }
+    // }
     return tid;
 }
 #endif

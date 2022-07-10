@@ -22,6 +22,8 @@
 #include <android-base/logging.h>
 #include <android-base/macros.h>
 
+#define __ANDROID__
+
 #define CAP_MAP_ENTRY(cap) { #cap, CAP_##cap }
 
 namespace android {

@@ -757,19 +757,23 @@ static void UmountSecondStageRes() {
     }
 }
 
-// static void MountExtraFilesystems() {
-// #define CHECKCALL(x) \
-//     if ((x) != 0) PLOG(FATAL) << #x " failed.";
+static void MountExtraFilesystems() {
+#define CHECKCALL(x) \
+    if ((x) != 0) PLOG(FATAL) << #x " failed.";
 
-//     // /apex is used to mount APEXes
-//     CHECKCALL(mount("tmpfs", "/apex", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
-//                     "mode=0755,uid=0,gid=0"));
+    // /run is used to store runtime data
+    CHECKCALL(mount("tmpfs", "/run", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+                    "mode=0755,uid=0,gid=0"));
 
-//     // /linkerconfig is used to keep generated linker configuration
-//     CHECKCALL(mount("tmpfs", "/linkerconfig", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
-//                     "mode=0755,uid=0,gid=0"));
-// #undef CHECKCALL
-// }
+    // // /apex is used to mount APEXes
+    // CHECKCALL(mount("tmpfs", "/apex", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+    //                 "mode=0755,uid=0,gid=0"));
+
+    // // /linkerconfig is used to keep generated linker configuration
+    // CHECKCALL(mount("tmpfs", "/linkerconfig", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+    //                 "mode=0755,uid=0,gid=0"));
+#undef CHECKCALL
+}
 
 static void RecordStageBoottimes(const boot_clock::time_point& second_stage_start_time) {
     int64_t first_stage_start_time_ns = -1;
@@ -916,7 +920,7 @@ int SecondStageMain(int argc, char** argv) {
     }
 
     // Mount extra filesystems required during second stage init
-//    MountExtraFilesystems();
+   MountExtraFilesystems();
 
     // // Now set up SELinux for second stage.
     // SelinuxSetupKernelLogging();

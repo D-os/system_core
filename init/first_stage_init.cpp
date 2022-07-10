@@ -43,7 +43,7 @@
 #include "first_stage_console.h"
 #include "first_stage_mount.h"
 #include "reboot_utils.h"
-#include "second_stage_resources.h"
+// #include "second_stage_resources.h"
 // #include "snapuserd_transition.h"
 #include "switch_root.h"
 #include "util.h"
@@ -276,31 +276,31 @@ int FirstStageMain(int argc, char** argv) {
     // CHECKCALL(mknod("/dev/ptmx", S_IFCHR | 0666, makedev(5, 2)));
     // CHECKCALL(mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3)));
 
-    // These below mounts are done in first stage init so that first stage mount can mount
-    // subdirectories of /mnt/{vendor,product}/.  Other mounts, not required by first stage mount,
-    // should be done in rc files.
-    // Mount staging areas for devices managed by vold
-    // See storage config details at http://source.android.com/devices/storage/
-    CHECKCALL(mount("tmpfs", "/mnt", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
-                    "mode=0755,uid=0,gid=1000"));
-    // /mnt/vendor is used to mount vendor-specific partitions that can not be
-    // part of the vendor partition, e.g. because they are mounted read-write.
-    CHECKCALL(mkdir("/mnt/vendor", 0755));
-    // /mnt/product is used to mount product-specific partitions that can not be
-    // part of the product partition, e.g. because they are mounted read-write.
-    CHECKCALL(mkdir("/mnt/product", 0755));
+//    // These below mounts are done in first stage init so that first stage mount can mount
+//    // subdirectories of /mnt/{vendor,product}/.  Other mounts, not required by first stage mount,
+//    // should be done in rc files.
+//    // Mount staging areas for devices managed by vold
+//    // See storage config details at http://source.android.com/devices/storage/
+//    CHECKCALL(mount("tmpfs", "/mnt", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+//                    "mode=0755,uid=0,gid=1000"));
+//    // /mnt/vendor is used to mount vendor-specific partitions that can not be
+//    // part of the vendor partition, e.g. because they are mounted read-write.
+//    CHECKCALL(mkdir("/mnt/vendor", 0755));
+//    // /mnt/product is used to mount product-specific partitions that can not be
+//    // part of the product partition, e.g. because they are mounted read-write.
+//    CHECKCALL(mkdir("/mnt/product", 0755));
 
-    // /debug_ramdisk is used to preserve additional files from the debug ramdisk
-    CHECKCALL(mount("tmpfs", "/debug_ramdisk", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
-                    "mode=0755,uid=0,gid=0"));
+//    // /debug_ramdisk is used to preserve additional files from the debug ramdisk
+//    CHECKCALL(mount("tmpfs", "/debug_ramdisk", "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+//                    "mode=0755,uid=0,gid=0"));
 
-    // /second_stage_resources is used to preserve files from first to second
-    // stage init
-    CHECKCALL(mount("tmpfs", kSecondStageRes, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
-                    "mode=0755,uid=0,gid=0"))
+//    // /second_stage_resources is used to preserve files from first to second
+//    // stage init
+//    CHECKCALL(mount("tmpfs", kSecondStageRes, "tmpfs", MS_NOEXEC | MS_NOSUID | MS_NODEV,
+//                    "mode=0755,uid=0,gid=0"))
 
-    // First stage init stores Mainline sepolicy here.
-    CHECKCALL(mkdir("/dev/selinux", 0744));
+//    // First stage init stores Mainline sepolicy here.
+//    CHECKCALL(mkdir("/dev/selinux", 0744));
 #undef CHECKCALL
 
     SetStdioToDevNull(argv);
@@ -361,19 +361,19 @@ int FirstStageMain(int argc, char** argv) {
         StartConsole(cmdline);
     }
 
-    if (access(kBootImageRamdiskProp, F_OK) == 0) {
-        std::string dest = GetRamdiskPropForSecondStage();
-        std::string dir = android::base::Dirname(dest);
-        std::error_code ec;
-        if (!fs::create_directories(dir, ec) && !!ec) {
-            LOG(FATAL) << "Can't mkdir " << dir << ": " << ec.message();
-        }
-        if (!fs::copy_file(kBootImageRamdiskProp, dest, ec)) {
-            LOG(FATAL) << "Can't copy " << kBootImageRamdiskProp << " to " << dest << ": "
-                       << ec.message();
-        }
-        LOG(INFO) << "Copied ramdisk prop to " << dest;
-    }
+//    if (access(kBootImageRamdiskProp, F_OK) == 0) {
+//        std::string dest = GetRamdiskPropForSecondStage();
+//        std::string dir = android::base::Dirname(dest);
+//        std::error_code ec;
+//        if (!fs::create_directories(dir, ec) && !!ec) {
+//            LOG(FATAL) << "Can't mkdir " << dir << ": " << ec.message();
+//        }
+//        if (!fs::copy_file(kBootImageRamdiskProp, dest, ec)) {
+//            LOG(FATAL) << "Can't copy " << kBootImageRamdiskProp << " to " << dest << ": "
+//                       << ec.message();
+//        }
+//        LOG(INFO) << "Copied ramdisk prop to " << dest;
+//    }
 
     // If "/force_debuggable" is present, the second-stage init will use a userdebug
     // sepolicy and load adb_debug.prop to allow adb root, if the device is unlocked.

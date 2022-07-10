@@ -44,13 +44,13 @@ namespace android {
 namespace init {
 namespace {
 
-static bool BindMount(const std::string& source, const std::string& mount_point) {
-    if (mount(source.c_str(), mount_point.c_str(), nullptr, MS_BIND | MS_REC, nullptr) == -1) {
-        PLOG(ERROR) << "Failed to bind mount " << source;
-        return false;
-    }
-    return true;
-}
+// static bool BindMount(const std::string& source, const std::string& mount_point) {
+//     if (mount(source.c_str(), mount_point.c_str(), nullptr, MS_BIND | MS_REC, nullptr) == -1) {
+//         PLOG(ERROR) << "Failed to bind mount " << source;
+//         return false;
+//     }
+//     return true;
+// }
 
 static bool ChangeMount(const std::string& mount_point, unsigned long mountflags) {
     if (mount(nullptr, mount_point.c_str(), nullptr, mountflags, nullptr) == -1) {
@@ -108,15 +108,15 @@ bool SetupMountNamespaces() {
     // point to private.
     if (!ChangeMount("/", MS_SHARED | MS_REC)) return false;
 
-    // /apex is a private mountpoint to give different sets of APEXes for
-    // the bootstrap and default mount namespaces. The processes running with
-    // the bootstrap namespace get APEXes from the read-only partition.
-    if (!(ChangeMount("/apex", MS_PRIVATE))) return false;
+//    // /apex is a private mountpoint to give different sets of APEXes for
+//    // the bootstrap and default mount namespaces. The processes running with
+//    // the bootstrap namespace get APEXes from the read-only partition.
+//    if (!(ChangeMount("/apex", MS_PRIVATE))) return false;
 
-    // /linkerconfig is a private mountpoint to give a different linker configuration
-    // based on the mount namespace. Subdirectory will be bind-mounted based on current mount
-    // namespace
-    if (!(ChangeMount("/linkerconfig", MS_PRIVATE))) return false;
+//    // /linkerconfig is a private mountpoint to give a different linker configuration
+//    // based on the mount namespace. Subdirectory will be bind-mounted based on current mount
+//    // namespace
+//    if (!(ChangeMount("/linkerconfig", MS_PRIVATE))) return false;
 
     // The two mount namespaces present challenges for scoped storage, because
     // vold, which is responsible for most of the mounting, lives in the
@@ -144,18 +144,18 @@ bool SetupMountNamespaces() {
     // default namespace.
     // /mnt/androidwritable is similar to /mnt/installer but serves for
     // MOUNT_EXTERNAL_ANDROID_WRITABLE apps.
-    if (!mkdir_recursive("/mnt/user", 0755)) return false;
-    if (!mkdir_recursive("/mnt/installer", 0755)) return false;
-    if (!mkdir_recursive("/mnt/androidwritable", 0755)) return false;
-    if (!(BindMount("/mnt/user", "/mnt/installer"))) return false;
-    if (!(BindMount("/mnt/user", "/mnt/androidwritable"))) return false;
-    // First, make /mnt/installer and /mnt/androidwritable a slave bind mount
-    if (!(ChangeMount("/mnt/installer", MS_SLAVE))) return false;
-    if (!(ChangeMount("/mnt/androidwritable", MS_SLAVE))) return false;
-    // Then, make it shared again - effectively creating a new peer group, that
-    // will be inherited by new mount namespaces.
-    if (!(ChangeMount("/mnt/installer", MS_SHARED))) return false;
-    if (!(ChangeMount("/mnt/androidwritable", MS_SHARED))) return false;
+//    if (!mkdir_recursive("/mnt/user", 0755)) return false;
+//    if (!mkdir_recursive("/mnt/installer", 0755)) return false;
+//    if (!mkdir_recursive("/mnt/androidwritable", 0755)) return false;
+//    if (!(BindMount("/mnt/user", "/mnt/installer"))) return false;
+//    if (!(BindMount("/mnt/user", "/mnt/androidwritable"))) return false;
+//    // First, make /mnt/installer and /mnt/androidwritable a slave bind mount
+//    if (!(ChangeMount("/mnt/installer", MS_SLAVE))) return false;
+//    if (!(ChangeMount("/mnt/androidwritable", MS_SLAVE))) return false;
+//    // Then, make it shared again - effectively creating a new peer group, that
+//    // will be inherited by new mount namespaces.
+//    if (!(ChangeMount("/mnt/installer", MS_SHARED))) return false;
+//    if (!(ChangeMount("/mnt/androidwritable", MS_SHARED))) return false;
 
     bootstrap_ns_fd.reset(OpenMountNamespace());
     bootstrap_ns_id = GetMountNamespaceId();

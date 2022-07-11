@@ -6,12 +6,13 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/inotify.h>
-#include <sys/limits.h>
-#include <sys/poll.h>
+#include <limits.h>
+#include <poll.h>
 #include <linux/input.h>
 #include <err.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 
 struct label {
     const char *name;

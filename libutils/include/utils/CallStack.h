@@ -31,7 +31,7 @@
 #endif
 #ifndef CALLSTACK_WEAK
 # ifdef WEAKS_AVAILABLE
-#   define CALLSTACK_WEAK __attribute__((weak))
+#   define CALLSTACK_WEAK
 # else // !WEAKS_AVAILABLE
 #   define CALLSTACK_WEAK
 # endif // !WEAKS_AVAILABLE

@@ -20,9 +20,10 @@
 #include <utils/Errors.h>
 #include <utils/Log.h>
 
-#include <unwindstack/AndroidUnwinder.h>
+#define UNW_LOCAL_ONLY
+#include <cxxabi.h>
+#include <libunwind.h>
 
-#define CALLSTACK_WEAK  // Don't generate weak definitions.
 #include <utils/CallStack.h>
 
 namespace android {
@@ -45,19 +46,32 @@ void CallStack::update(int32_t ignoreDepth, pid_t tid) {
 
     mFrameLines.clear();
 
-    unwindstack::AndroidLocalUnwinder unwinder;
-    unwindstack::AndroidUnwinderData data;
-    std::optional<pid_t> tid_val;
-    if (tid != -1) {
-        *tid_val = tid;
-    }
-    if (!unwinder.Unwind(tid_val, data)) {
-        ALOGW("%s: Failed to unwind callstack: %s", __FUNCTION__, data.GetErrorString().c_str());
-    }
-    for (size_t i = ignoreDepth; i < data.frames.size(); i++) {
-        auto& frame = data.frames[i];
-        frame.num -= ignoreDepth;
-        mFrameLines.push_back(String8(unwinder.FormatFrame(frame).c_str()));
+    unw_context_t context;
+    unw_cursor_t cursor;
+    unw_word_t ip, offset;
+
+    unw_getcontext(&context);
+    unw_init_local(&cursor, &context);
+
+    while (unw_step(&cursor) > 0) {
+        if (ignoreDepth-- > 0) continue;
+
+        unw_get_reg(&cursor, UNW_REG_IP, &ip);
+
+        String8 line{String8::format("0x%lx", ip)};
+
+        char symbol[256];
+        if (unw_get_proc_name(&cursor, symbol, sizeof(symbol), &offset) == 0) {
+            char* nameptr = symbol;
+            int status;
+            char* demangled = abi::__cxa_demangle(symbol, nullptr, nullptr, &status);
+            if (status == 0) {
+                nameptr = demangled;
+            }
+            line.append(String8::format(" %s+0x%lx", nameptr, offset));
+            std::free(demangled);
+        }
+        mFrameLines.push_back(line);
     }
 }
 
